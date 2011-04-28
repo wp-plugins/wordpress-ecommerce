@@ -3,7 +3,7 @@ Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.1
 Tested up to: 3.1.2
-Stable tag: trunk
+Stable tag: 2.0
 
 The lite version of our complete WordPress eCommerce plugin
 
