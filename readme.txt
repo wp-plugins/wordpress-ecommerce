@@ -1,9 +1,9 @@
-=== MarketPress Lite - WordPress eCommerce ===
+=== WordPress eCommerce - MarketPress ===
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.1
 Tested up to: 3.1.2
-Stable tag: 2.0
+Stable tag: 2.0.3
 
 The lite version of our complete WordPress eCommerce plugin
 
@@ -113,6 +113,20 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+= 2.0.3 =
+* Fix another bug with Authorize.net gateway when product names are too long
+* Update UK county list
+* Fix some style issues
+
+= 2.0.2 =
+* Fix up bugs with Authorize.net gateway
+* Bugfixes with storing shipping info on checkout
+* Disable ajax cart if domain mapping is set to original backend
+* Fix add link popup in messages rich text editors
+
+= 2.0.1 =
+* Change cart cookie name to prevent errors with existing carts on upgrade
 
 = 2.0 =
 * Global carts/checkout - PayPal Express only compatible gateway currently

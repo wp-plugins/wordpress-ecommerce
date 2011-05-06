@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.0
+Version: 2.0.3
 Plugin URI: http://premium.wpmudev.org/project/e-commerce-lite
 Description: The lite version of our complete WordPress ecommerce plugin
 Author: Aaron Edwards (Incsub)
@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class MarketPress {
 
-  var $version = '2.0';
+  var $version = '2.0.3';
   var $location;
   var $plugin_dir = '';
   var $plugin_url = '';
@@ -199,7 +199,7 @@ class MarketPress {
         'order_status' => __('<p>If you have any questions about your order please do not hesitate to <a href="http://mysite.com/contact/">contact us</a>.</p>', 'mp'),
         'cart' => '',
         'shipping' => __('<p>Please enter your shipping information in the form below to proceed with your order.</p>', 'mp'),
-        'checkout' => __('<p>Please choose your desired payment method.</p>', 'mp'),
+        'checkout' => '',
         'confirm_checkout' => __('<p>You are almost done! Please do a final review of your order to make sure everything is correct then click the "Confirm Payment" button.</p>', 'mp'),
         'success' => __('<p>Thank you for your order! We appreciate your business, and please come back often to check out our new products.</p>', 'mp')
       ),
@@ -493,6 +493,16 @@ Thanks again!", 'mp')
     // declare the variables we need to access in js
     wp_localize_script( 'mp-store-js', 'MP_Ajax', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'emptyCartMsg' => __('Are you sure you want to remove all items from your cart?', 'mp'), 'successMsg' => __('Item(s) Added!', 'mp'), 'imgUrl' => $this->plugin_url.'images/loading.gif', 'addingMsg' => __('Adding to your cart...', 'mp'), 'outMsg' => __('Out of Stock', 'mp') ) );
   }
+
+  function load_tiny_mce($selector) {
+		// We need internal-linking.php for wp_link_dialog() function
+		require_once (ABSPATH . 'wp-admin/includes/internal-linking.php');
+		// We need wp_tiny_mce_preload_dialogs() and wp_link_dialog() to create (hidden) markup for Insert/Edit Link dialog.
+		add_action('admin_print_footer_scripts', 'wp_tiny_mce_preload_dialogs', 30);
+		add_action('tiny_mce_preload_dialogs', 'wp_link_dialog', 30);
+
+    wp_tiny_mce(false, array("editor_selector" => $selector));
+	}
 
   //loads the jquery lightbox plugin
   function enqueue_lightbox() {
@@ -1954,7 +1964,7 @@ Thanks again!", 'mp')
     global $blog_id;
     $blog_id = (is_multisite()) ? $blog_id : 1;
 
-    $cookie_id = 'mp_cart_' . COOKIEHASH;
+    $cookie_id = 'mp_globalcart_' . COOKIEHASH;
 
     if (isset($_COOKIE[$cookie_id])) {
       $global_cart = unserialize($_COOKIE[$cookie_id]);
@@ -1975,7 +1985,7 @@ Thanks again!", 'mp')
   
   //saves global cart array to cookie
   function set_global_cart_cookie($global_cart) {
-    $cookie_id = 'mp_cart_' . COOKIEHASH;
+    $cookie_id = 'mp_globalcart_' . COOKIEHASH;
     
     //set cookie
     $expire = time() + 2592000; //1 month expire
@@ -2321,9 +2331,9 @@ Thanks again!", 'mp')
 		
       //save to session
       global $current_user;
-      $meta = get_user_meta($current_user->ID, 'mp_shipping_info');
-      $_SESSION['mp_shipping_info']['email'] = ($_POST['email']) ? trim(stripslashes($_POST['email'])) : $current_user->user_email;
-      $_SESSION['mp_shipping_info']['name'] = ($_POST['name']) ? trim(stripslashes($_POST['name'])) : $current_user->user_firstname . ' ' . $current_user->user_lastname;
+      $meta = get_user_meta($current_user->ID, 'mp_shipping_info', true);
+      $_SESSION['mp_shipping_info']['email'] = ($_POST['email']) ? trim(stripslashes($_POST['email'])) : (isset($meta['email']) ? $meta['email']: $current_user->user_email);
+      $_SESSION['mp_shipping_info']['name'] = ($_POST['name']) ? trim(stripslashes($_POST['name'])) : (isset($meta['name']) ? $meta['name'] : $current_user->user_firstname . ' ' . $current_user->user_lastname);
       $_SESSION['mp_shipping_info']['address1'] = ($_POST['address1']) ? trim(stripslashes($_POST['address1'])) : $meta['address1'];
       $_SESSION['mp_shipping_info']['address2'] = ($_POST['address2']) ? trim(stripslashes($_POST['address2'])) : $meta['address2'];
       $_SESSION['mp_shipping_info']['city'] = ($_POST['city']) ? trim(stripslashes($_POST['city'])) : $meta['city'];
@@ -4836,7 +4846,7 @@ Notification Preferences: %s', 'mp');
 
         //enqueue visual editor
         if (get_user_option('rich_editing') == 'true')
-        	wp_tiny_mce(true, array("editor_selector" => "mp_msgs_txt"));
+        	$this->load_tiny_mce("mp_msgs_txt");
         ?>
         <div class="icon32"><img src="<?php echo $this->plugin_url . 'images/messages.png'; ?>" /></div>
         <h2><?php _e('Messages Settings', 'mp'); ?></h2>
