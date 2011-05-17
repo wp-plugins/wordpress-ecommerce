@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.0.3
+Version: 2.0.4
 Plugin URI: http://premium.wpmudev.org/project/e-commerce-lite
 Description: The lite version of our complete WordPress ecommerce plugin
 Author: Aaron Edwards (Incsub)
@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class MarketPress {
 
-  var $version = '2.0.3';
+  var $version = '2.0.4';
   var $location;
   var $plugin_dir = '';
   var $plugin_url = '';

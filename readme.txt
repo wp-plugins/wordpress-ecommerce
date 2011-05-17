@@ -2,8 +2,8 @@
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.1
-Tested up to: 3.1.2
-Stable tag: 2.0.3
+Tested up to: 3.2 beta
+Stable tag: 2.0.4
 
 The lite version of our complete WordPress eCommerce plugin
 
@@ -113,6 +113,9 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+= 2.0.4 =
+* Fix missing icons with default theme
 
 = 2.0.3 =
 * Fix another bug with Authorize.net gateway when product names are too long
