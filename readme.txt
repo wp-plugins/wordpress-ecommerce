@@ -5,15 +5,15 @@ Requires at least: 3.1
 Tested up to: 3.2 beta
 Stable tag: 2.0.4
 
-The lite version of our complete WordPress eCommerce plugin
+A simple, extensible, eCommerce foundation for your WordPress-powered store.
 
 == Description ==
 
 MarketPress brings you a solid, simple yet extensible foundation for a WordPress-Powered store.
 
-The first WordPress e-commerce plugin designed from the ground up for seamless integration with WP Multisite and BuddyPress.
+The first WordPress eCommerce plugin designed from the ground up for seamless integration with WordPress, Multisite and BuddyPress.
 
-We went to great lengths to provide simple Shipping and Gateway plugin APIs, and very robust themeing support and a set of completely documented template tags. MarketPress makes full use of the custom post types, taxonomies, etc. of WP 3.0 so it creates NO messy custom tables for each blog that crowd your DB like other shop plugins out there!
+We went to great lengths to provide simple shipping and gateway APIs, robust themeing support and a set of completely documented template tags. MarketPress makes full use of custom post types, taxonomies, etc. It creates NO messy custom tables for each blog that crowd your database like other shop plugins out there!
 [youtube http://www.youtube.com/watch?v=Wa8fUFKwl-k&hd=1]
 
 = Some MarketPress Features: =
@@ -57,13 +57,13 @@ MarketPress Lite is a fully functional but limited version of our <a href='http:
 = Make More Money with Multisite and MarketPress Combined! =
 Selling your products online is the number one way to make money using WordPress. MarketPress does this expertly for a single user WordPress site. It has also been built specifically to allow you to create a network of stores with Multisite and exponentially increases the profits you can be making with your site.
 
-It does this by allowing you turn your own WordPress Network of shops (premium version only) and allows you to take a pre-defined percentage fee on each transaction!  You provide the service of allowing folks to create an entire store with the ease and familiarity of WordPress - and for your efforts you can dictate the percentage provided to you automatically from each transition.
+It does this by allowing you create your own WordPress Network of shops (premium version only), enabling you to take a pre-defined percentage fee on each transaction.  You provide the service of allowing folks to create an entire store with the ease and familiarity of WordPress - and for your efforts you can dictate the percentage provided to you automatically from each transition.
 
-Truly this site works for you.  It couldn't be easier to set up - and once you're done, the automated process allows you to make money while your attention can be diverted elsewhere.  It works for Etsy.  It works for Shoppify.  Now it can work for you too!
+The site works for you.  It couldn't be easier to set up and, once you're done, the automated process allows you to make money while your attention can be diverted elsewhere.  It works for Etsy.  It works for Shoppify.  Now it can work for you!
 
 = Fantastic Themes - Made Easy =
 
-Also available on WPMU DEV, you'll find a Theme Framework and Child Theme (more being added all the time).  This provides the perfect scenario of powerful functionality in the admin and gorgeous display of your products on the public side!  <a href='http://premium.wpmudev.org/project/frame-market-theme'>Check them out today!</a>
+Also available on WPMU DEV, you'll find a Parent and Child Theme (more being added all the time).  This provides the perfect scenario of powerful functionality in the admin and gorgeous display of your products on the public side!  <a href='http://premium.wpmudev.org/project/frame-market-theme'>Check them out today!</a>
 
 == Installation ==
 = To Install: =
@@ -80,7 +80,7 @@ Also available on WPMU DEV, you'll find a Theme Framework and Child Theme (more 
 == Frequently Asked Questions ==
 
 = Do I need to be a paid WPMU DEV member? =
-No. This plugin is offered as is at no charge. A full-featured, premium version is available for purchase on WPMU DEV.
+No. This plugin is offered at no charge. A full-featured, premium version is available for purchase on WPMU DEV.
 
 What else could I get in the premium version?
 
