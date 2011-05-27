@@ -265,14 +265,14 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
       $content .=  '</tr>';
       $total = $total + $tax_price;
     }
-      
-    $content .=  '<tfoot><tr>';
+
+    $content .=  '</tbody><tfoot><tr>';
     $content .=  '  <td class="mp_cart_subtotal_lbl" colspan="2">' . __('Cart Total:', 'mp') . '</td>';
     $content .=  '  <td class="mp_cart_col_total">' . $mp->format_currency('', $total) . '</td>';
     $content .=  '  <td class="mp_cart_col_updatecart"><input type="submit" name="update_cart_submit" value="' . __('Update Cart &raquo;', 'mp') . '" /></td>';
     $content .=  '</tr></tfoot>';
     
-    $content .= '</tbody></table></form>';
+    $content .= '</table></form>';
     
   } else if ($type == 'checkout') {
   
@@ -455,11 +455,11 @@ function _mp_cart_login($echo = false) {
 function _mp_cart_shipping($editable = false, $echo = false) {
   global $mp, $current_user;
   $settings = get_option('mp_settings');
-  
+
   $meta = get_user_meta($current_user->ID, 'mp_shipping_info', true);
   //get address
-  $email = (!empty($_SESSION['mp_shipping_info']['email'])) ? $_SESSION['mp_shipping_info']['email'] : isset($meta['email']) ? $meta['email']: $current_user->user_email;
-  $name = (!empty($_SESSION['mp_shipping_info']['name'])) ? $_SESSION['mp_shipping_info']['name'] : isset($meta['name']) ? $meta['name'] : $current_user->user_firstname . ' ' . $current_user->user_lastname;
+  $email = (!empty($_SESSION['mp_shipping_info']['email'])) ? $_SESSION['mp_shipping_info']['email'] : (isset($meta['email']) ? $meta['email']: $current_user->user_email);
+  $name = (!empty($_SESSION['mp_shipping_info']['name'])) ? $_SESSION['mp_shipping_info']['name'] : (isset($meta['name']) ? $meta['name'] : $current_user->user_firstname . ' ' . $current_user->user_lastname);
   $address1 = (!empty($_SESSION['mp_shipping_info']['address1'])) ? $_SESSION['mp_shipping_info']['address1'] : $meta['address1'];
   $address2 = (!empty($_SESSION['mp_shipping_info']['address2'])) ? $_SESSION['mp_shipping_info']['address2'] : $meta['address2'];
   $city = (!empty($_SESSION['mp_shipping_info']['city'])) ? $_SESSION['mp_shipping_info']['city'] : $meta['city'];
@@ -469,7 +469,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
   if (!$country)
     $country = $settings['base_country'];
   $phone = (!empty($_SESSION['mp_shipping_info']['phone'])) ? $_SESSION['mp_shipping_info']['phone'] : $meta['phone'];
-  
+
   $content = '';
   //don't show if logged in
   if (!is_user_logged_in() && $editable) {
@@ -920,6 +920,7 @@ function mp_order_status() {
         <li><?php _e('Order Total:', 'mp'); ?> <strong><?php echo $mp->format_currency('', $order->mp_order_total); ?></strong></li>
       </ul>
 
+      <?php if (!defined('MP_HIDE_ORDERSTATUS_SHIPPING')) { ?>
       <h3><?php _e('Shipping Information:', 'mp'); ?></h3>
       <table>
         <tr>
@@ -968,6 +969,8 @@ function mp_order_status() {
       	</tr>
         <?php } ?>
       </table>
+      <?php } ?>
+      
       <?php mp_orderstatus_link(true, false, __('&laquo; Back', 'mp')); ?>
       <?php
 
@@ -1721,9 +1724,13 @@ function mp_items_count_in_cart() {
   if (is_array($selected_cart) && count($selected_cart)) {
     $count = 0;
     foreach ($selected_cart as $cart) {
-      foreach ($cart as $variations) {
-        foreach ($variations as $item) {
-          $count += $item['quantity'];
+      if (is_array($cart) && count($cart)) {
+        foreach ($cart as $variations) {
+          if (is_array($variations) && count($variations)) {
+            foreach ($variations as $item) {
+              $count += $item['quantity'];
+            }
+          }
         }
       }
     }

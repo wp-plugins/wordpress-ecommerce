@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.0.4
+Version: 2.1
 Plugin URI: http://premium.wpmudev.org/project/e-commerce-lite
 Description: The lite version of our complete WordPress ecommerce plugin
 Author: Aaron Edwards (Incsub)
@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class MarketPress {
 
-  var $version = '2.0.4';
+  var $version = '2.1';
   var $location;
   var $plugin_dir = '';
   var $plugin_url = '';
@@ -71,7 +71,10 @@ class MarketPress {
 
     //load APIs and plugins
 		add_action( 'plugins_loaded', array(&$this, 'load_plugins') );
-
+		
+    //load importers
+		add_action( 'plugins_loaded', array(&$this, 'load_importers') );
+		
 		//localize the plugin
 		add_action( 'plugins_loaded', array(&$this, 'localization') );
 
@@ -101,6 +104,7 @@ class MarketPress {
 		//Templates and Rewrites
 		add_action( 'template_redirect', array(&$this, 'load_store_templates') );
 		add_action( 'template_redirect', array(&$this, 'load_store_theme') );
+	  add_action( 'pre_get_posts', array(&$this, 'remove_canonical') );
 		add_filter( 'rewrite_rules_array', array(&$this, 'add_rewrite_rules') );
   	add_filter( 'query_vars', array(&$this, 'add_queryvars') );
 		add_filter( 'wp_list_pages', array(&$this, 'filter_list_pages'), 10, 2 );
@@ -128,10 +132,9 @@ class MarketPress {
 		add_action( 'widgets_init', create_function('', 'return register_widget("MarketPress_Tag_Cloud_Widget");') );
 		
 		// Edit profile
-		add_action('profile_update', array(&$this, 'user_profile_update'));
-		add_action('edit_user_profile', array(&$this, 'user_profile_fields'));
-		add_action('show_user_profile', array(&$this, 'user_profile_fields'));
-		
+		add_action( 'profile_update', array(&$this, 'user_profile_update') );
+		add_action( 'edit_user_profile', array(&$this, 'user_profile_fields') );
+		add_action( 'show_user_profile', array(&$this, 'user_profile_fields') );
 	}
 
   function install() {
@@ -144,7 +147,8 @@ class MarketPress {
       'base_country' => 'US',
       'tax' => array (
         'rate' => 0,
-        'tax_shipping' => 1
+        'tax_shipping' => 1,
+        'tax_inclusive' => 0
       ),
       'currency' => 'USD',
       'curr_symbol_position' => 1,
@@ -196,13 +200,14 @@ class MarketPress {
       ),
       'msg' => array (
         'product_list' => '',
-        'order_status' => __('<p>If you have any questions about your order please do not hesitate to <a href="http://mysite.com/contact/">contact us</a>.</p>', 'mp'),
+        'order_status' => __('<p>If you have any questions about your order please do not hesitate to contact us.</p>', 'mp'),
         'cart' => '',
         'shipping' => __('<p>Please enter your shipping information in the form below to proceed with your order.</p>', 'mp'),
         'checkout' => '',
         'confirm_checkout' => __('<p>You are almost done! Please do a final review of your order to make sure everything is correct then click the "Confirm Payment" button.</p>', 'mp'),
         'success' => __('<p>Thank you for your order! We appreciate your business, and please come back often to check out our new products.</p>', 'mp')
       ),
+      'store_email' => get_option("admin_email"),
       'email' => array (
         'new_order_subject' => __('Your Order Confirmation (ORDERID)', 'mp'),
         'new_order_txt' => __("Thank you for your order CUSTOMERNAME!
@@ -265,7 +270,7 @@ Thanks again!", 'mp')
   	if ($this->location == 'mu-plugins')
       load_muplugin_textdomain( 'mp', '/marketpress-includes/languages/' );
   	else if ($this->location == 'subfolder-plugins')
-      load_plugin_textdomain( 'mp', false, '/marketpress/marketpress-includes/languages/' );
+      load_plugin_textdomain( 'mp', false, '/wordpress-ecommerce/marketpress-includes/languages/' );
     else if ($this->location == 'plugins')
       load_plugin_textdomain( 'mp', false, '/marketpress-includes/languages/' );
 
@@ -301,7 +306,11 @@ Thanks again!", 'mp')
   function load_bp_features() {
     include_once( $this->plugin_dir . 'marketpress-bp.php' );
   }
-
+  
+  function load_importers() {
+    include_once( $this->plugin_dir . 'marketpress-importers.php' );
+  }
+  
   function load_plugins() {
     $settings = get_option('mp_settings');
 
@@ -429,8 +438,22 @@ Thanks again!", 'mp')
 			do_action( 'mp_handle_payment_return_' . $wp_query->query_vars['paymentgateway'] );
 			// exit();
 		}
+		
+		//stop canonical problems with virtual pages
+  	$page = get_query_var('pagename');
+  	if ($page == 'cart' || $page == 'orderstatus' || $page == 'product_list') {
+			remove_action('template_redirect', 'redirect_canonical');
+		}
 	}
-
+	
+  function remove_canonical($wp_query) {
+		//stop canonical problems with virtual pages redirecting
+  	$page = get_query_var('pagename');
+  	if ($page == 'cart' || $page == 'orderstatus' || $page == 'product_list') {
+			remove_action('template_redirect', 'redirect_canonical');
+		}
+	}
+	
   function admin_nopermalink_warning() {
     //warns admins if permalinks are not enabled on the blog
     if ( current_user_can('manage_options') && !get_option('permalink_structure') )
@@ -486,7 +509,10 @@ Thanks again!", 'mp')
 
   //ajax cart handling for store frontend
   function store_script() {
-
+		//disable ajax cart if incompatible by domain mapping plugin settings
+		if (is_multisite() && class_exists('domain_map') && 'original' == get_site_option('map_admindomain'))
+		  return;
+		  
     //setup shopping cart javascript
     wp_enqueue_script( 'mp-store-js', $this->plugin_url . 'js/store.js', array('jquery'), $this->version );
 
@@ -714,7 +740,7 @@ Thanks again!", 'mp')
     if ( ! post_type_exists( 'product' ) )
       return $value;
 
-		if ( !in_array('index.php?product=$matches[1]&paged=$matches[2]', $value) ) {
+		if ( is_array($value) && !in_array('index.php?product=$matches[1]&paged=$matches[2]', $value) ) {
 			$this->flush_rewrite();
     }
   }
@@ -797,7 +823,7 @@ Thanks again!", 'mp')
 
     //load proper theme for checkout page
     if ($wp_query->query_vars['pagename'] == 'cart') {
-			
+
       //init session for store pages
       $this->start_session();
 
@@ -809,11 +835,11 @@ Thanks again!", 'mp')
 				wp_redirect( mp_cart_link(false, true) );
 				exit;
 			}
-			
+
 			// Redirect to https if forced to use SSL by a payment gateway
 			if (get_query_var('checkoutstep')) {
 				foreach ((array)$mp_gateway_active_plugins as $plugin) {
-		      if ($plugin->force_ssl) {
+					if ($plugin->force_ssl) {
 					  if ( !is_ssl() ) {
 							wp_redirect('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 							exit();
@@ -3125,6 +3151,21 @@ Thanks again!", 'mp')
     return $payment_info;
   }
 
+	//filters wp_mail headers
+	function mail($to, $subject, $msg) {
+    $settings = get_option('mp_settings');
+
+    //remove any other filters
+    remove_all_filters( 'wp_mail_from' );
+		remove_all_filters( 'wp_mail_from_name' );
+
+		//add our own filters
+		add_filter( 'wp_mail_from_name', create_function('', 'return get_bloginfo("name");') );
+		add_filter( 'wp_mail_from', create_function('', '$settings = get_option("mp_settings");return isset($settings["store_email"]) ? $settings["store_email"] : get_option("admin_email");') );
+
+		return wp_mail($to, $subject, $msg);
+	}
+	
   //replaces shortcodes in email msgs with dynamic content
   function filter_email($order, $text) {
     $settings = get_option('mp_settings');
@@ -3222,7 +3263,7 @@ Thanks again!", 'mp')
     $msg = $this->filter_email($order, $settings['email']['new_order_txt']);
     $msg = apply_filters( 'mp_order_notification_' . $_SESSION['mp_payment_method'], $msg, $order );
 
-    wp_mail($order->mp_shipping_info['email'], $subject, $msg);
+    $this->mail($order->mp_shipping_info['email'], $subject, $msg);
     
     //send message to admin
     $subject = __('New Order Notification: ORDERID', 'mp');
@@ -3234,6 +3275,8 @@ ORDERINFO
 Shipping Information:
 SHIPPINGINFO
 
+Email: %s
+
 Payment Information:
 PAYMENTINFO
 
@@ -3241,9 +3284,9 @@ You can manage this order here: %s", 'mp');
 
     $subject = $this->filter_email($order, $subject);
     $msg = $this->filter_email($order, $msg);
-		$msg = sprintf($msg, admin_url('edit.php?post_type=product&page=marketpress-orders&order_id=') . $order->ID);
-
-    wp_mail(get_option('admin_email'), $subject, $msg);
+		$msg = sprintf($msg, $order->mp_shipping_info['email'], admin_url('edit.php?post_type=product&page=marketpress-orders&order_id=') . $order->ID);
+    $store_email = isset($settings['store_email']) ? $settings['store_email'] : get_option("admin_email");
+    $this->mail($store_email, $subject, $msg);
   }
 
   //sends email for orders marked as shipped
@@ -3263,7 +3306,7 @@ You can manage this order here: %s", 'mp');
     $msg = $this->filter_email($order, $settings['email']['shipped_order_txt']);
     $msg = apply_filters( 'mp_shipped_order_notification', $msg, $order );
 
-    wp_mail($order->mp_shipping_info['email'], $subject, $msg);
+    $this->mail($order->mp_shipping_info['email'], $subject, $msg);
     
   }
 
@@ -3292,8 +3335,8 @@ Edit Product: %s
 Notification Preferences: %s', 'mp');
     $msg = sprintf($msg, $name, number_format_i18n($stock), get_permalink($product_id), get_edit_post_link($product_id), admin_url('edit.php?post_type=product&page=marketpress#mp-inventory-setting'));
     $msg = apply_filters( 'mp_low_stock_notification', $msg, $product_id );
-
-    wp_mail(get_option('admin_email'), $subject, $msg);
+    $store_email = isset($settings['store_email']) ? $settings['store_email'] : get_option("admin_email");
+    $this->mail($store_email, $subject, $msg);
 
     //save so we don't send an email every time
     update_post_meta($product_id, 'mp_stock_email_sent', 1);
@@ -4021,7 +4064,7 @@ Notification Preferences: %s', 'mp');
     		'messages'      => __('Messages', 'mp'),
     		'shipping'      => __('Shipping', 'mp'),
     		'gateways'      => __('Payments', 'mp'),
-    		'shortcodes'          => __('Shortcodes', 'mp')
+    		'shortcodes'    => __('Shortcodes', 'mp')
     	);
     } else {
       $tabs = array( 'presentation'  => __('Presentation', 'mp') );
@@ -4224,6 +4267,17 @@ Notification Preferences: %s', 'mp');
                 <br /><span class="description"><?php _e('Please see your local tax laws. Most areas charge tax on shipping fees.', 'mp') ?></span>
           			</td>
                 </tr>
+                <?php /* ?>
+                <tr>
+        				<th scope="row"><?php _e('Show Prices Inclusive of Tax?', 'mp') ?></th>
+                <td>
+                <?php $tax_inclusive = isset($settings['tax']['tax_inclusive']) ? $settings['tax']['tax_inclusive'] : 0; ?>
+        				<label><input value="1" name="mp[tax][tax_inclusive]" type="radio"<?php checked($tax_inclusive, 1) ?> /> <?php _e('Yes', 'mp') ?></label>
+                <label><input value="0" name="mp[tax][tax_inclusive]" type="radio"<?php checked($tax_inclusive, 0) ?> /> <?php _e('No', 'mp') ?></label>
+                <br /><span class="description"><?php _e('Please see your local tax laws.', 'mp') ?></span>
+          			</td>
+                </tr>
+                <?php */ ?>
               </table>
             </div>
           </div>
@@ -4859,6 +4913,14 @@ Notification Preferences: %s', 'mp');
             <h3 class='hndle'><span><?php _e('Email Notifications', 'mp') ?></span></h3>
             <div class="inside">
               <table class="form-table">
+							<tr>
+        				<th scope="row"><?php _e('Store Admin Email', 'mp'); ?></th>
+        				<td>
+								<?php $store_email = isset($settings['store_email']) ? $settings['store_email'] : get_option("admin_email"); ?>
+        				<span class="description"><?php _e('The email address that new order notifications are sent to and received from.', 'mp') ?></span><br />
+                <input name="mp[store_email]" value="<?php echo esc_attr($store_email); ?>" maxlength="150" size="50" />
+                </td>
+                </tr>
                 <tr>
         				<th scope="row"><?php _e('New Order', 'mp'); ?></th>
         				<td>

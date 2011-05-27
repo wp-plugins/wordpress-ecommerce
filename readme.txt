@@ -2,8 +2,8 @@
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.1
-Tested up to: 3.2 beta
-Stable tag: 2.0.4
+Tested up to: 3.2 beta 2
+Stable tag: 2.1
 
 A simple, extensible, eCommerce foundation for your WordPress-powered store.
 
@@ -38,7 +38,8 @@ We went to great lengths to provide simple shipping and gateway APIs, robust the
 * Customers can checkout without being a site user
 * Order status tracking for customers on the front end. Previous orders are stored in a cookie and/or user meta.
 * More quality features than any other WordPress e-commerce plugin.
-* Multiple payment gateways - Premium Version only!
+
+* Multiple popular payment gateways - Premium Version only!
 
 = MarketPress Premium =
 MarketPress Lite is a fully functional but limited version of our <a href='http://premium.wpmudev.org/project/e-commerce'>full MarketPress plugin</a>. Here are some of the features you'll get in the premium version available on WPMU DEV:
@@ -51,6 +52,7 @@ MarketPress Lite is a fully functional but limited version of our <a href='http:
 * Charge for store upgrades like themes and gateways with our Supporter plugin
 * Global Shopping Carts
 * Ability for Network owner to take a percentage of each marketplace sale through the PayPal chained payment gateway
+* Import digital download products from WP e-Commerce right into MarketPress
 
 <a href='http://premium.wpmudev.org/project/e-commerce'>**Upgrade to the full version now &raquo;**</a>
 
@@ -77,6 +79,15 @@ Also available on WPMU DEV, you'll find a Parent and Child Theme (more being add
 = To Set Up And Configure MarketPress =
 * You can find <a href='http://premium.wpmudev.org/project/e-commerce/installation/'>in-depth setup and usage instructions with screenshots here &raquo;</a>
 
+= Importing products from the WP e-Commerce plugin =
+As of the 2.1 update you can import products directly into MarketPress from WP e-Commerce 3.8+ (older versions not compatible)
+
+1.  Activate WP e-Commerce and MarketPress plugins
+2.  Go to Site Admin>Products>Store Settings and click the tab for "WP e-Commerce Importer"
+3.  Select 'Import Now'.
+4.  You should see a success message letting you know the process has been completed.
+
+
 == Frequently Asked Questions ==
 
 = Do I need to be a paid WPMU DEV member? =
@@ -92,6 +103,7 @@ What else could I get in the premium version?
 * Charge for store upgrades like themes and gateways with our Supporter plugin
 * Global Shopping Carts
 * Ability for Network owner to take a percentage of each marketplace sale through the PayPal chained payment gateway
+* Import digital downloads from WP e-Commerce into MarketPress!
 
 <a href='http://premium.wpmudev.org/project/e-commerce'>**Upgrade to the full version now &raquo;**</a>
 
@@ -113,6 +125,22 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+= 2.1 =
+* WP e-Commerce product importer added
+* New importer plugin class added for others to easily build importers
+* Fix language file location
+* Fix slug conflicts with virtual pages and similar permalinks: http://premium.wpmudev.org/forums/topic/checkout-page-redirecting-slug-bug
+* Add Kuwaiti dinar
+* Additional error checks for FrameMarket theme
+* Add check for MP_HIDE_ORDERSTATUS_SHIPPING constant
+* Fix rare bug with permalinks
+* Add configurable store admin email address
+* Filter email from and name for store emails
+* Add buyer email to order admin notification
+* Remove digital flag in PayPal express gateway
+* Fix out of order tbody tag on cart page
+* Remove PHP5 depreciated class assignments
 
 = 2.0.4 =
 * Fix missing icons with default theme

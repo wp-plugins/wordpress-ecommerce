@@ -265,7 +265,7 @@ class MarketPress_MS {
     <?php
   }
 }
-$mp_wpmu = &new MarketPress_MS();
+$mp_wpmu = new MarketPress_MS();
 
 function mp_main_site_id() {
   global $current_site;
