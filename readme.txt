@@ -3,7 +3,7 @@ Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.1
 Tested up to: 3.2 beta 2
-Stable tag: 2.1
+Stable tag: 2.1.1
 
 A simple, extensible, eCommerce foundation for your WordPress-powered store.
 
@@ -125,6 +125,9 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+= 2.1.1 =
+* Fixed UN notice
 
 = 2.1 =
 * WP e-Commerce product importer added
