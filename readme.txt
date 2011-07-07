@@ -1,9 +1,9 @@
 === WordPress eCommerce - MarketPress ===
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
-Requires at least: 3.1
-Tested up to: 3.2 beta 2
-Stable tag: 2.1.1
+Requires at least: 3.2
+Tested up to: 3.2
+Stable tag: 2.1.3
 
 A simple, extensible, eCommerce foundation for your WordPress-powered store.
 
@@ -19,7 +19,8 @@ We went to great lengths to provide simple shipping and gateway APIs, robust the
 = Some MarketPress Features: =
 * Simple product thumbnails/images with lightbox zooming
 * Add temporary sale prices
-* Downloadable/digital products with limits and tracking - Premium Version only!
+* Downloadable/digital products with limits and tracking - NOW IN THE LITE VERSION!
+* Full coupon/discount support. Create coupon codes for percentage or amount off, and control and track their usage date range and/or maximum uses - NOW IN THE LITE VERSION!
 * Unlimited product variations
 * Stock tracking and alerts per variation
 * Per order product limits
@@ -32,7 +33,6 @@ We went to great lengths to provide simple shipping and gateway APIs, robust the
 * Fully customizable email messages
 * Full support for most major currencies
 * Flexible sales tax/VAT options
-* Full coupon/discount support. Create coupon codes for percentage or amount off, and control and track their usage date range and/or maximum uses - Premium Version only!.
 * 3 built-in css themes designed to work within your site theme - Premium Version only!
 * Fully customizable store urls/slugs
 * Customers can checkout without being a site user
@@ -125,6 +125,22 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+= 2.1.3 =
+* WP 3.2 compatibility
+* Coupons and Downloads now in the Lite version!
+* Added a little hack for compatibility with Headway and Genesis themes
+* Google Analytics Ecommerce tracking support
+* Ability to add define('MP_HIDE_LOGIN_OPTION', true); to hide the login option on checkout
+* Fixed redirect bug for login link on checkout
+* Many new hooks for WPML full translation capability
+* Ability to add add_theme_support('mp_style') to disable frontend css
+* Fixed Kenyan Shilling symbol
+* Added hooks to the download handler to allow plugins to override
+* Fixed bug in drop down menus
+* Changes to the download script to enable larger files
+* Ability to add define('MP_LARGE_DOWNLOADS', true); to wp-config.php to use redirects for very large files
+* Some improvements to the WP e-Commerce product importer for old thumbnails
 
 = 2.1.1 =
 * Fixed UN notice

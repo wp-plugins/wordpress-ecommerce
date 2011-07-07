@@ -206,6 +206,9 @@ td.mp_var_remove {
 	margin-bottom: 5px;
 	float: right;
 }
+.wp_themeSkin iframe {
+    background: white;
+}
 div.mp-pro-update {
 	background-color: #FFEBE8;
 	border-color: #CC0000;

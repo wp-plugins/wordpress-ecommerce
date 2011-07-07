@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.1.1
+Version: 2.1.3
 Plugin URI: http://premium.wpmudev.org/project/e-commerce-lite
 Description: The lite version of our complete WordPress ecommerce plugin
 Author: Aaron Edwards (Incsub)
@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class MarketPress {
 
-  var $version = '2.1';
+  var $version = '2.1.3';
   var $location;
   var $plugin_dir = '';
   var $plugin_url = '';
@@ -102,7 +102,7 @@ class MarketPress {
 		add_action( 'wp_insert_post', array(&$this, 'save_product_meta'), 10, 2 );
 
 		//Templates and Rewrites
-		add_action( 'template_redirect', array(&$this, 'load_store_templates') );
+		add_action( 'wp', array(&$this, 'load_store_templates') );
 		add_action( 'template_redirect', array(&$this, 'load_store_theme') );
 	  add_action( 'pre_get_posts', array(&$this, 'remove_canonical') );
 		add_filter( 'rewrite_rules_array', array(&$this, 'add_rewrite_rules') );
@@ -157,6 +157,7 @@ class MarketPress {
       'inventory_threshhold' => 3,
       'max_downloads' => 5,
       'force_login' => 0,
+      'ga_ecommerce' => 'none',
       'store_theme' => 'icons',
       'product_img_height' => 150,
       'product_img_width' => 150,
@@ -521,15 +522,10 @@ Thanks again!", 'mp')
   }
 
   function load_tiny_mce($selector) {
-		// We need internal-linking.php for wp_link_dialog() function
-		require_once (ABSPATH . 'wp-admin/includes/internal-linking.php');
-		// We need wp_tiny_mce_preload_dialogs() and wp_link_dialog() to create (hidden) markup for Insert/Edit Link dialog.
-		add_action('admin_print_footer_scripts', 'wp_tiny_mce_preload_dialogs', 30);
-		add_action('tiny_mce_preload_dialogs', 'wp_link_dialog', 30);
-
-    wp_tiny_mce(false, array("editor_selector" => $selector));
+    wp_tiny_mce(false, array("editor_selector" => $selector, 'plugins' => 'inlinepopups,spellchecker,tabfocus,paste,link'));
 	}
 
+	
   //loads the jquery lightbox plugin
   function enqueue_lightbox() {
 
@@ -615,8 +611,8 @@ Thanks again!", 'mp')
     $settings = get_option('mp_settings');
 
     // Register custom taxonomy
-		register_taxonomy( 'product_category', 'product', array("hierarchical" => true, 'label' => __('Product Categories', 'mp'), 'singular_label' => __('Product Category', 'mp'), 'rewrite' => array('slug' => $settings['slugs']['store'] . '/' . $settings['slugs']['products'] . '/' . $settings['slugs']['category'])) );
-		register_taxonomy( 'product_tag', 'product', array("hierarchical" => false, 'label' => __('Product Tags', 'mp'), 'singular_label' => __('Product Tag', 'mp'), 'rewrite' => array('slug' => $settings['slugs']['store'] . '/' . $settings['slugs']['products'] . '/' . $settings['slugs']['tag'])) );
+		register_taxonomy( 'product_category', 'product', apply_filters( 'mp_register_product_category', array("hierarchical" => true, 'label' => __('Product Categories', 'mp'), 'singular_label' => __('Product Category', 'mp'), 'rewrite' => array('slug' => $settings['slugs']['store'] . '/' . $settings['slugs']['products'] . '/' . $settings['slugs']['category'])) ) );
+		register_taxonomy( 'product_tag', 'product', apply_filters( 'mp_register_product_tag', array("hierarchical" => false, 'label' => __('Product Tags', 'mp'), 'singular_label' => __('Product Tag', 'mp'), 'rewrite' => array('slug' => $settings['slugs']['store'] . '/' . $settings['slugs']['products'] . '/' . $settings['slugs']['tag'])) ) );
 
     // Register custom product post type
     $supports = array( 'title', 'editor', 'author', 'excerpt', 'revisions', 'thumbnail' );
@@ -740,8 +736,10 @@ Thanks again!", 'mp')
     if ( ! post_type_exists( 'product' ) )
       return $value;
 
-		if ( is_array($value) && !in_array('index.php?product=$matches[1]&paged=$matches[2]', $value) ) {
-			$this->flush_rewrite();
+	if ( is_array($value) && !in_array('index.php?product=$matches[1]&paged=$matches[2]', $value) ) {
+		$this->flush_rewrite();
+    } else {
+        return $value;
     }
   }
 
@@ -1055,7 +1053,7 @@ Thanks again!", 'mp')
   function load_store_theme() {
     $settings = get_option('mp_settings');
 
-    if ($settings['store_theme'] == 'none')
+    if ( $settings['store_theme'] == 'none' || current_theme_supports('mp_style') )
       return;
     else
       wp_enqueue_style( 'mp-store-theme', $this->plugin_url . 'themes/' . $settings['store_theme'] . '.css', false, $this->version );
@@ -1193,7 +1191,7 @@ Thanks again!", 'mp')
 		$store_url = mp_store_link(false, true);
 		$store_page = get_option('mp_store_page');
 		foreach($list as $menu_item) {
-			if ($menu_item->ID == $store_page || $menu_item->url == $store_url) {
+			if ($menu_item->object_id == $store_page || $menu_item->url == $store_url) {
 				$store_object = $menu_item;
 				break;
 			}
@@ -1706,7 +1704,7 @@ Thanks again!", 'mp')
       update_post_meta( $post_id, 'mp_shipping', apply_filters('mp_save_shipping_meta', $mp_shipping) );
       
       //download url
-
+      update_post_meta( $post_id, 'mp_file', esc_url_raw($_POST['mp_file']) );
 
       //for any other plugin to hook into
       do_action( 'mp_save_product_meta', $post_id, $meta );
@@ -1807,9 +1805,8 @@ Thanks again!", 'mp')
     $settings = get_option('mp_settings');
 		$meta = get_post_custom($post->ID);
     ?>
-    <div class="mp-pro-update"><a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Downloadable products are enabled in MarketPress Pro only, upgrade to enable &raquo;', 'mp'); ?></a></div>
-    <label><?php _e('File URL', 'mp'); ?>:<br /><input disabled="disabled" type="text" size="50" id="mp_file" class="mp_file" name="mp_file" value="" /></label>
-    <input disabled="disabled" id="mp_upload_button" type="button" value="<?php _e('Upload File', 'mp'); ?>" /><br />
+    <label><?php _e('File URL', 'mp'); ?>:<br /><input type="text" size="50" id="mp_file" class="mp_file" name="mp_file" value="<?php echo esc_attr($meta["mp_file"][0]); ?>" /></label>
+    <input id="mp_upload_button" type="button" value="<?php _e('Upload File', 'mp'); ?>" /><br />
     <?php
     //display allowed filetypes if WPMU
     if (is_multisite()) {
@@ -2061,7 +2058,9 @@ Thanks again!", 'mp')
     }
 
     $global_cart = $this->get_cart_cookie(true);
-    
+    if (!is_array($global_cart))
+      return array();
+      
     $full_cart = array();
     foreach ($global_cart as $bid => $cart) {
 
@@ -2167,7 +2166,7 @@ Thanks again!", 'mp')
     } else if (isset($_POST['product_id'])) { //add a product to cart
 
 			//if not valid product_id return
-      $product_id = intval($_POST['product_id']);
+      $product_id = apply_filters('mp_product_id_add_to_cart', intval($_POST['product_id']));
       $product = get_post($product_id);
       if (!$product)
         return false;
@@ -2548,12 +2547,55 @@ Thanks again!", 'mp')
 
   //checks a coupon code for validity. Return boolean
   function check_coupon($code) {
-    return false;
+    $coupon_code = preg_replace('/[^A-Z0-9_-]/', '', strtoupper($code));
+
+    //empty code
+    if (!$coupon_code)
+      return false;
+
+    $coupons = get_option('mp_coupons');
+
+    //no record for code
+    if (!is_array($coupons[$coupon_code]))
+      return false;
+
+    //start date not valid yet
+    if (time() < $coupons[$coupon_code]['start'])
+      return false;
+
+    //if end date and expired
+    if ($coupons[$coupon_code]['end'] && time() > $coupons[$coupon_code]['end'])
+      return false;
+
+    //check remaining uses
+    if ($coupons[$coupon_code]['uses'] && (intval($coupons[$coupon_code]['uses']) - intval($coupons[$coupon_code]['used'])) <= 0)
+      return false;
+
+    //everything passed so it's valid
+    return true;
   }
 
   //get coupon value. Returns array(discount, new_total) or false for invalid code
   function coupon_value($code, $total) {
-		return false;
+    if ($this->check_coupon($code)) {
+      $coupons = get_option('mp_coupons');
+      $coupon_code = preg_replace('/[^A-Z0-9_-]/', '', strtoupper($code));
+      if ($coupons[$coupon_code]['discount_type'] == 'amt') {
+        $settings = get_option('mp_settings');
+        $new_total = round($total - $coupons[$coupon_code]['discount'], 2);
+        $new_total = ($new_total < 0) ? 0.00 : $new_total;
+        $discount = '-' . $this->format_currency('', $coupons[$coupon_code]['discount']);
+        return array('discount' => $discount, 'new_total' => $new_total);
+      } else {
+        $new_total = round($total - ($total * ($coupons[$coupon_code]['discount'] * 0.01)), 2);
+        $new_total = ($new_total < 0) ? 0.00 : $new_total;
+        $discount = '-' . $coupons[$coupon_code]['discount'] . '%';
+        return array('discount' => $discount, 'new_total' => $new_total);
+      }
+
+    } else {
+      return false;
+    }
   }
 
   //record coupon use. Returns boolean successful
@@ -2826,11 +2868,125 @@ Thanks again!", 'mp')
 
   //returns formatted download url for a given product. Returns false if no download
 	function get_download_url($product_id, $order_id) {
-    return false;
+    $url = get_post_meta($product_id, 'mp_file', true);
+    if (!$url)
+      return false;
+      
+		return get_permalink($product_id) . "?orderid=$order_id";
 	}
 
   //serves a downloadble product file
   function serve_download($product_id) {
+    $settings = get_option('mp_settings');
+
+		if (!isset($_GET['orderid']))
+      return false;
+      
+    //get the order
+    $order = $this->get_order($_GET['orderid']);
+		if (!$order)
+      return false;
+
+		//check that order is paid
+    if ($order->post_status == 'order_received')
+      return false;
+		  
+		$url = get_post_meta($product_id, 'mp_file', true);
+		
+		//get cart count
+		if (isset($order->mp_cart_info[$product_id][0]['download']))
+		  $download = $order->mp_cart_info[$product_id][0]['download'];
+
+		//if new url is not set try to grab it from the order history
+    if (!$url && isset($download['url']))
+      $url = $download['url'];
+		else if (!$url)
+			return false;
+		
+		//check for too many downloads
+		$max_downloads = intval($settings['max_downloads']) ? intval($settings['max_downloads']) : 5;
+		if (intval($download['downloaded']) >= $max_downloads)
+		  return false;
+		
+		//for plugins to hook into the download script. Don't forget to increment the download count, then exit!
+		do_action('mp_serve_download', $url, $order, $download);
+		
+		//allows you to simply filter the url
+		$url = apply_filters('mp_download_url', $url, $order, $download);
+		
+		//if your getting out of memory errors with large downloads, you can use a redirect instead, it's not so secure though
+		if ( defined('MP_LARGE_DOWNLOADS') && MP_LARGE_DOWNLOADS ) {
+		  //attempt to record a download attempt
+			if (isset($download['downloaded'])) {
+	    	$order->mp_cart_info[$product_id][0]['download']['downloaded'] = $download['downloaded'] + 1;
+      	update_post_meta($order->ID, 'mp_cart_info', $order->mp_cart_info);
+			}
+			wp_redirect($url);
+			exit;
+		} else {
+
+			//create unique filename
+			$ext = ltrim(strrchr(basename($url), '.'), '.');
+			$filename = sanitize_file_name( strtolower( get_the_title($product_id) ) . '.' . $ext );
+
+			// Determine if this file is in our server
+			$dirs = wp_upload_dir();
+			$location = str_replace($dirs['baseurl'], $dirs['basedir'], $url);
+			if ( file_exists($location) ) {
+			  $tmp = $location;
+			  $not_delete = true;
+			} else {
+				require_once(ABSPATH . '/wp-admin/includes/file.php');
+
+		    $tmp = download_url($url); //we download the url so we can serve it via php, completely obfuscating original source
+
+				if ( is_wp_error($tmp) ) {
+					@unlink($tmp);
+					return false;
+				}
+	    }
+
+		  if (file_exists($tmp)) {
+		    ob_end_clean(); //kills any buffers set by other plugins
+				header('Content-Description: File Transfer');
+		    header('Content-Type: application/octet-stream');
+		    header('Content-Disposition: attachment; filename="'.$filename.'"');
+		    header('Content-Transfer-Encoding: binary');
+		    header('Expires: 0');
+		    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		    header('Pragma: public');
+		    header('Content-Length: ' . filesize($tmp));
+		    //readfile($tmp); //seems readfile chokes on large files
+				$chunksize = 1 * (1024 * 1024); // how many bytes per chunk
+				$buffer = '';
+				$cnt = 0;
+				$handle = fopen( $tmp, 'rb' );
+				if ( $handle === false ) {
+					return false;
+				}
+				while ( !feof( $handle ) ) {
+					$buffer = fread( $handle, $chunksize );
+					echo $buffer;
+					ob_flush();
+					flush();
+					if ( $retbytes ) {
+						$cnt += strlen( $buffer );
+					}
+				}
+				fclose( $handle );
+
+				if (!$not_delete)
+		    	@unlink($tmp);
+			}
+			
+	    //attempt to record a download attempt
+			if (isset($download['downloaded'])) {
+	    	$order->mp_cart_info[$product_id][0]['download']['downloaded'] = $download['downloaded'] + 1;
+      	update_post_meta($order->ID, 'mp_cart_info', $order->mp_cart_info);
+			}
+	    exit;
+		}
+		
 		return false;
 	}
   
@@ -3302,7 +3458,9 @@ You can manage this order here: %s", 'mp');
 		if ($this->download_only_cart($order->mp_cart_info))
     	return false;
 
+    $settings['email']['shipped_order_subject'] = apply_filters('mp_shipped_order_notification_subject', $settings['email']['shipped_order_subject'], $order);
     $subject = $this->filter_email($order, $settings['email']['shipped_order_subject']);
+    $settings['email']['shipped_order_txt'] = apply_filters( 'mp_shipped_order_notification_body', $settings['email']['shipped_order_txt'], $order );
     $msg = $this->filter_email($order, $settings['email']['shipped_order_txt']);
     $msg = apply_filters( 'mp_shipped_order_notification', $msg, $order );
 
@@ -3429,6 +3587,11 @@ Notification Preferences: %s', 'mp');
   	}
   	return $text;
   }
+
+  //returns the js needed to record ecommerce transactions. $project should be an array of id, title
+	function create_ga_ecommerce($order) {
+  	return false;
+	}
 
   //displays the detail page of an order
   function single_order_page() {
@@ -3602,7 +3765,7 @@ Notification Preferences: %s', 'mp');
             <th class="mp_cart_col_thumb">&nbsp;</th>
             <th class="mp_cart_col_sku"><?php _e('SKU', 'mp'); ?></th>
             <th class="mp_cart_col_product"><?php _e('Item', 'mp'); ?></th>
-            <th class="mp_cart_col_quant"><?php _e('Qantity', 'mp'); ?></th>
+            <th class="mp_cart_col_quant"><?php _e('Quantity', 'mp'); ?></th>
             <th class="mp_cart_col_price"><?php _e('Price', 'mp'); ?></th>
             <th class="mp_cart_col_subtotal"><?php _e('Subtotal', 'mp'); ?></th>
             <th class="mp_cart_col_downloads"><?php _e('Downloads', 'mp'); ?></th>
@@ -3737,8 +3900,12 @@ Notification Preferences: %s', 'mp');
           <p><?php echo htmlentities($order->mp_payment_info['note']); ?></p>
           <?php } ?>
 
+          <?php do_action('mp_single_order_display_shipping', $order); ?>
+
         </div>
       </div>
+
+      <?php do_action('mp_single_order_display_box', $order); ?>
 
     </div>
 
@@ -4053,7 +4220,7 @@ Notification Preferences: %s', 'mp');
     $settings = get_option('mp_settings');
     ?>
     <div class="wrap">
-    <ul id="sidemenu">
+    <h3 class="nav-tab-wrapper">
     <?php
     $tab = ( !empty($_GET['tab']) ) ? $_GET['tab'] : 'main';
 
@@ -4074,17 +4241,17 @@ Notification Preferences: %s', 'mp');
     // If someone wants to remove or add a tab
   	$tabs = apply_filters( 'marketpress_tabs', $tabs );
 
-  	$class = ( 'main' == $tab ) ? ' class="current"' : '';
-  	$tabhtml[] = '		<li><a href="' . admin_url( 'edit.php?post_type=product&amp;page=marketpress' ) . '"' . $class . '>' . __('General', 'mp') . '</a>';
+  	$class = ( 'main' == $tab ) ? ' nav-tab-active' : '';
+  	$tabhtml[] = '	<a href="' . admin_url( 'edit.php?post_type=product&amp;page=marketpress' ) . '" class="nav-tab'.$class.'">' . __('General', 'mp') . '</a>';
 
   	foreach ( $tabs as $stub => $title ) {
-  		$class = ( $stub == $tab ) ? ' class="current"' : '';
-  		$tabhtml[] = '		<li><a href="' . admin_url( 'edit.php?post_type=product&amp;page=marketpress&amp;tab=' . $stub ) . '"' . $class . ">$title</a>";
+  		$class = ( $stub == $tab ) ? ' nav-tab-active' : '';
+  		$tabhtml[] = '	<a href="' . admin_url( 'edit.php?post_type=product&amp;page=marketpress&amp;tab=' . $stub ) . '" class="nav-tab'.$class.'">'.$title.'</a>';
   	}
 
-  	echo implode( "</li>\n", $tabhtml ) . '</li>';
+  	echo implode( "\n", $tabhtml );
     ?>
-  	</ul>
+  	</h3>
   	<div class="clear"></div>
 
   	<?php
@@ -4333,9 +4500,8 @@ Notification Preferences: %s', 'mp');
                 <tr id="mp-downloads-setting">
                 <th scope="row"><?php _e('Maximum Downloads', 'mp') ?></th>
         				<td>
-            		<a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('MarketPress Pro only, upgrade to enable &raquo;', 'mp'); ?></a><br />
         				<span class="description"><?php _e('How many times may a customer download a file they have purchased? (It\'s best to set this higher than one in case they have any problems downloading)', 'mp') ?></span><br />
-                <select name="mp[max_downloads]" disabled="disabled">
+                <select name="mp[max_downloads]">
 								<?php
 								$max_downloads = intval($settings['max_downloads']) ? intval($settings['max_downloads']) : 5;
 								for ($i=1; $i<=100; $i++) {
@@ -4361,6 +4527,18 @@ Notification Preferences: %s', 'mp');
         				<label><input value="1" name="mp[disable_cart]" type="radio"<?php checked($settings['disable_cart'], 1) ?> /> <?php _e('Yes', 'mp') ?></label>
                 <label><input value="0" name="mp[disable_cart]" type="radio"<?php checked($settings['disable_cart'], 0) ?> /> <?php _e('No', 'mp') ?></label>
                 <br /><span class="description"><?php _e('This option turns MarketPress into more of a product listing plugin, disabling shopping carts, checkout, and order management. This is useful if you simply want to list items you can buy in a store somewhere else, optionally linking the "Buy Now" buttons to an external site. Some examples are a car dealership, or linking to songs/albums in itunes, or linking to products on another site with your own affiliate links.', 'mp') ?></span>
+          			</td>
+                </tr>
+                <tr>
+        				<th scope="row"><?php _e('Google Analytics Ecommerce Tracking', 'mp') ?></th>
+                <td>
+								<a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable Google Analytics &raquo;', 'mp'); ?></a><br />
+								<select name="mp[ga_ecommerce]" disabled="disabled">
+									<option value="none"><?php _e('None', 'mp') ?></option>
+									<option value="new" selected="selected"><?php _e('Asynchronous Tracking Code', 'mp') ?></option>
+									<option value="old"><?php _e('Old Tracking Code', 'mp') ?></option>
+								</select>
+        				<br /><span class="description"><?php _e('If you already use Google Analytics for your website, you can track detailed ecommerce information by enabling this setting. Choose whether you are using the new asynchronous or old tracking code. Before Google Analytics can report ecommerce activity for your website, you must enable ecommerce tracking on the profile settings page for your website. Also keep in mind that some gateways do not reliably show the receipt page, so tracking may not be accurate in those cases. It is recommended to use the PayPal gateway for the most accurate data. <a href="http://analytics.blogspot.com/2009/05/how-to-use-ecommerce-tracking-in-google.html" target="_blank">More information &raquo;</a>', 'mp') ?></span>
           			</td>
                 </tr>
               </table>
@@ -4402,6 +4580,42 @@ Notification Preferences: %s', 'mp');
           }
         }
 
+        //save or add coupon
+        if (isset($_POST['submit_settings'])) {
+          //check nonce
+          check_admin_referer('mp_coupons');
+
+          $error = false;
+
+          $new_coupon_code = preg_replace('/[^A-Z0-9_-]/', '', strtoupper($_POST['coupon_code']));
+          if (!$new_coupon_code)
+            $error[] = __('Please enter a valid Coupon Code', 'mp');
+
+          $coupons[$new_coupon_code]['discount'] = round($_POST['discount'], 2);
+          if ($coupons[$new_coupon_code]['discount'] <= 0)
+            $error[] = __('Please enter a valid Discount Amount', 'mp');
+
+          $coupons[$new_coupon_code]['discount_type'] = $_POST['discount_type'];
+          if ($coupons[$new_coupon_code]['discount_type'] != 'amt' && $coupons[$new_coupon_code]['discount_type'] != 'pct')
+            $error[] = __('Please choose a valid Discount Type', 'mp');
+
+          $coupons[$new_coupon_code]['start'] = strtotime($_POST['start']);
+          if ($coupons[$new_coupon_code]['start'] === false)
+            $error[] = __('Please enter a valid Start Date', 'mp');
+
+          $coupons[$new_coupon_code]['end'] = strtotime($_POST['end']);
+          if ($coupons[$new_coupon_code]['end'] && $coupons[$new_coupon_code]['end'] < $coupons[$new_coupon_code]['start'])
+            $error[] = __('Please enter a valid End Date not earlier than the Start Date', 'mp');
+
+          $coupons[$new_coupon_code]['uses'] = (is_numeric($_POST['uses'])) ? (int)$_POST['uses'] : '';
+
+          if (!$error) {
+            update_option('mp_coupons', $coupons);
+            $new_coupon_code = '';
+            echo '<div class="updated fade"><p>'.__('Coupon succesfully saved.', 'mp').'</p></div>';
+          }
+        }
+
         //if editing a coupon
         if (isset($_GET['code'])) {
           $new_coupon_code = $_GET['code'];
@@ -4416,7 +4630,6 @@ Notification Preferences: %s', 'mp');
       	</script>
         <div class="icon32"><img src="<?php echo $this->plugin_url . 'images/service.png'; ?>" /></div>
         <h2><?php _e('Coupons', 'mp') ?></h2>
-        <div class="error"><p><a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Coupons are enabled in MarketPress Pro only, upgrade to enable &raquo;', 'mp'); ?></a></p></div>
         <p><?php _e('You can create, delete, or update coupon codes for your store here.', 'mp') ?></p>
 
         <?php
@@ -4632,30 +4845,30 @@ Notification Preferences: %s', 'mp');
             <tbody>
             <tr>
               <td>
-                <input disabled="disabled" value="<?php echo $new_coupon_code ?>" name="coupon_code" type="text" style="text-transform: uppercase;" />
+                <input value="<?php echo $new_coupon_code ?>" name="coupon_code" type="text" style="text-transform: uppercase;" />
               </td>
               <td>
-                <input disabled="disabled" value="<?php echo $discount; ?>" size="3" name="discount" type="text" />
-                <select disabled="disabled" name="discount_type">
+                <input value="<?php echo $discount; ?>" size="3" name="discount" type="text" />
+                <select name="discount_type">
                  <option value="amt"<?php selected($discount_type, 'amt') ?>><?php echo $this->format_currency(); ?></option>
                  <option value="pct"<?php selected($discount_type, 'pct') ?>>%</option>
                 </select>
               </td>
               <td>
-                <input disabled="disabled" value="<?php echo $start; ?>" class="pickdate" size="11" name="start" type="text" />
+                <input value="<?php echo $start; ?>" class="pickdate" size="11" name="start" type="text" />
               </td>
               <td>
-                <input disabled="disabled" value="<?php echo $end; ?>" class="pickdate" size="11" name="end" type="text" />
+                <input value="<?php echo $end; ?>" class="pickdate" size="11" name="end" type="text" />
               </td>
               <td>
-                <input disabled="disabled" value="<?php echo $uses; ?>" size="4" name="uses" type="text" />
+                <input value="<?php echo $uses; ?>" size="4" name="uses" type="text" />
               </td>
             </tr>
             </tbody>
             </table>
 
             <p class="submit">
-              <input disabled="disabled" type="submit" name="submit_settings" value="<?php _e('Save Coupon', 'mp') ?>" />
+              <input type="submit" name="submit_settings" value="<?php _e('Save Coupon', 'mp') ?>" />
             </p>
           </div>
         </div>

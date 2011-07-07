@@ -198,7 +198,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
           
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 50 ) . '</td>';
-          $content .=  '  <td class="mp_cart_col_product_table"><a href="' . $data['url'] . '">' . $data['name'] . '</a>';
+          $content .=  '  <td class="mp_cart_col_product_table"><a href="' . apply_filters('mp_product_url_display_in_cart', $data['url'], $product_id) . '">' . apply_filters('mp_product_name_display_in_cart', $data['name'], $product_id) . '</a>' . '</td>'; // Added WPML
           $content .=  '  <td class="mp_cart_col_price">' . $mp->format_currency('', $data['price'] * $data['quantity']) . '</td>';
           $content .=  '  <td class="mp_cart_col_quant"><input type="text" size="2" name="quant[' . $bid . ':' . $product_id . ':' . $variation . ']" value="' . $data['quantity'] . '" />&nbsp;<label><input type="checkbox" name="remove[]" value="' . $bid . ':' . $product_id . ':' . $variation . '" /> ' . __('Remove', 'mp') . '</label></td>';
           $content .=  '</tr>';
@@ -295,7 +295,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 75 ) . '</td>';
-          $content .=  '  <td class="mp_cart_col_product_table"><a href="' . $data['url'] . '">' . $data['name'] . '</a>';
+          $content .=  '  <td class="mp_cart_col_product_table"><a href="' . apply_filters('mp_product_url_display_in_cart', $data['url'], $product_id) . '">' . apply_filters('mp_product_name_display_in_cart', $data['name'], $product_id) . '</a>' . '</td>'; // Added WPML
           $content .=  '  <td class="mp_cart_col_quant">' . number_format_i18n($data['quantity']) . '</td>';
           $content .=  '  <td class="mp_cart_col_price">' . $mp->format_currency('', $data['price'] * $data['quantity']) . '</td>';
           $content .=  '</tr>';
@@ -371,7 +371,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
           $totals[] = $data['price'] * $data['quantity'];
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 25 ) . '</td>';
-          $content .=  '  <td class="mp_cart_col_product_table"><a href="' . $data['url'] . '">' . $data['name'] . '</a>';
+          $content .=  '  <td class="mp_cart_col_product_table"><a href="' . apply_filters('mp_product_url_display_in_cart', $data['url'], $product_id) . '">' . apply_filters('mp_product_name_display_in_cart', $data['name'], $product_id) . '</a>' . '</td>'; // Added WPML
           $content .=  '  <td class="mp_cart_col_quant">' . number_format_i18n($data['quantity']) . '</td>';
           $content .=  '  <td class="mp_cart_col_price">' . $mp->format_currency('', $data['price'] * $data['quantity']) . '</td>';
           $content .=  '</tr>';
@@ -406,7 +406,7 @@ function _mp_cart_login($echo = false) {
   
   $content = '';
   //don't show if logged in
-  if (is_user_logged_in()) {
+  if ( is_user_logged_in() || defined('MP_HIDE_LOGIN_OPTION') ) {
     $content .= '<p class="mp_cart_direct_checkout">';
     $content .= '<a class="mp_cart_direct_checkout_link" href="'.mp_checkout_step_url('shipping').'">'.__('Checkout Now &raquo;', 'mp').'</a>';
     $content .= '</p>';
@@ -472,9 +472,9 @@ function _mp_cart_shipping($editable = false, $echo = false) {
 
   $content = '';
   //don't show if logged in
-  if (!is_user_logged_in() && $editable) {
+  if ( !is_user_logged_in() && !defined('MP_HIDE_LOGIN_OPTION') && $editable) {
     $content .= '<p class="mp_cart_login_msg">';
-    $content .= __('Made a purchase here before?', 'mp').' <a class="mp_cart_login_link" href="'.wp_login_url(mp_checkout_step_url('checkout')).'">'.__('Login now to retrieve your saved info &raquo;', 'mp').'</a>';
+    $content .= __('Made a purchase here before?', 'mp').' <a class="mp_cart_login_link" href="'.wp_login_url(mp_checkout_step_url('shipping')).'">'.__('Login now to retrieve your saved info &raquo;', 'mp').'</a>';
     $content .= '</p>';
   }
 
@@ -688,6 +688,9 @@ function _mp_cart_payment($type, $echo = false) {
     $track_link = '<a href="' . mp_orderstatus_link(false, true) . $_SESSION['mp_order'] . '/' . '">' . mp_orderstatus_link(false, true) . $_SESSION['mp_order'] . '/' . '</a>';
     $content .= '<p>' . sprintf(__('You may track the latest status of your order(s) here:<br />%s', 'mp'), $track_link) . '</p>';
 
+    //add ecommerce JS
+    $mp->create_ga_ecommerce( $mp->get_order($_SESSION['mp_order']) );
+
     //clear cart session vars
     unset($_SESSION['mp_payment_method']);
     unset($_SESSION['mp_order']);
@@ -864,7 +867,7 @@ function mp_order_status() {
               	$data = $variations;
                 echo '<tr>';
 	              echo '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id ) . '</td>';
-	              echo '  <td class="mp_cart_col_product"><a href="' . get_permalink($product_id) . '">' . esc_attr($data['name']) . '</a></td>';
+	              echo '  <td class="mp_cart_col_product"><a href="' . apply_filters('mp_product_url_display_in_cart', $data['url'], $product_id) . '">' . apply_filters('mp_product_name_display_in_cart', $data['name'], $product_id) . '</a>' . '</td>'; // Added WPML (This differs than other code)
 	              echo '  <td class="mp_cart_col_quant">' . number_format_i18n($data['quantity']) . '</td>';
 	              echo '  <td class="mp_cart_col_price">' . $mp->format_currency('', $data['price']) . '</td>';
 	              echo '  <td class="mp_cart_col_subtotal">' . $mp->format_currency('', $data['price'] * $data['quantity']) . '</td>';
@@ -874,7 +877,7 @@ function mp_order_status() {
 								foreach ($variations as $variation => $data) {
 		              echo '<tr>';
 		              echo '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id ) . '</td>';
-		              echo '  <td class="mp_cart_col_product"><a href="' . get_permalink($product_id) . '">' . esc_attr($data['name']) . '</a></td>';
+		              echo '  <td class="mp_cart_col_product"><a href="' . apply_filters('mp_product_url_display_in_cart', $data['url'], $product_id) . '">' . apply_filters('mp_product_name_display_in_cart', $data['name'], $product_id) . '</a>' . '</td>'; // Added WPML (This differs than other code)
 		              echo '  <td class="mp_cart_col_quant">' . number_format_i18n($data['quantity']) . '</td>';
 		              echo '  <td class="mp_cart_col_price">' . $mp->format_currency('', $data['price']) . '</td>';
 		              echo '  <td class="mp_cart_col_subtotal">' . $mp->format_currency('', $data['price'] * $data['quantity']) . '</td>';
@@ -1494,6 +1497,8 @@ function mp_buy_button( $echo = true, $context = 'list', $post_id = NULL ) {
 function mp_product_image( $echo = true, $context = 'list', $post_id = NULL, $size = NULL ) {
   global $id;
   $post_id = ( NULL === $post_id ) ? $id : $post_id;
+  // Added WPML
+  $post_id = apply_filters('mp_product_image_id', $post_id);
 
   $post = get_post($post_id);
 
@@ -1580,6 +1585,8 @@ function mp_cart_link($echo = true, $url = false, $link_text = '') {
     $link = '<a href="' . $link . '" class="mp_cart_link">' . $text . '</a>';
   }
 
+  $link = apply_filters( 'mp_cart_link', $link, $echo, $url, $link_text );
+
   if ($echo)
     echo $link;
   else
@@ -1600,6 +1607,8 @@ function mp_store_link($echo = true, $url = false, $link_text = '') {
     $text = ($link_text) ? $link_text : __('Visit Store', 'mp');
     $link = '<a href="' . $link . '" class="mp_store_link">' . $text . '</a>';
   }
+
+  $link = apply_filters( 'mp_store_link', $link, $echo, $url, $link_text );
 
   if ($echo)
     echo $link;
@@ -1622,6 +1631,8 @@ function mp_products_link($echo = true, $url = false, $link_text = '') {
     $link = '<a href="' . $link . '" class="mp_products_link">' . $text . '</a>';
   }
 
+  $link = apply_filters( 'mp_products_link', $link, $echo, $url, $link_text );
+  
   if ($echo)
     echo $link;
   else
@@ -1643,6 +1654,8 @@ function mp_orderstatus_link($echo = true, $url = false, $link_text = '') {
     $link = '<a href="' . $link . '" class="mp_orderstatus_link">' . $text . '</a>';
   }
 
+  $link = apply_filters( 'mp_orderstatus_link', $link, $echo, $url, $link_text );
+
   if ($echo)
     echo $link;
   else
@@ -1655,7 +1668,7 @@ function mp_orderstatus_link($echo = true, $url = false, $link_text = '') {
  * @param string $checkoutstep. Possible values: checkout-edit, shipping, checkout, confirm-checkout, confirmation
  */
 function mp_checkout_step_url($checkout_step) {
-  return mp_cart_link(false, true) . trailingslashit($checkout_step);
+  return apply_filters('mp_checkout_step_url', mp_cart_link(false, true) . trailingslashit($checkout_step));
 }
 
 /**
