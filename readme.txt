@@ -1,8 +1,8 @@
 === WordPress eCommerce - MarketPress ===
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
-Requires at least: 3.2
-Tested up to: 3.2
+Requires at least: 3.1
+Tested up to: 3.2.1
 Stable tag: 2.1.3
 
 A simple, extensible, eCommerce foundation for your WordPress-powered store.
@@ -16,7 +16,13 @@ The first WordPress eCommerce plugin designed from the ground up for seamless in
 We went to great lengths to provide simple shipping and gateway APIs, robust themeing support and a set of completely documented template tags. MarketPress makes full use of custom post types, taxonomies, etc. It creates NO messy custom tables for each blog that crowd your database like other shop plugins out there!
 [youtube http://www.youtube.com/watch?v=Wa8fUFKwl-k&hd=1]
 
-= Some MarketPress Features: =
+= NEW MarketPress Features: =
+* Digital Downloads!
+* Coupon Creation - Discount by percentage or dollar amount.  Easily limit number of coupons available and expiration dates!
+* Google Analytics Ecommerce
+* Full WPML translation capability
+
+= More MarketPress Features: =
 * Simple product thumbnails/images with lightbox zooming
 * Add temporary sale prices
 * Downloadable/digital products with limits and tracking - NOW IN THE LITE VERSION!
@@ -44,8 +50,6 @@ We went to great lengths to provide simple shipping and gateway APIs, robust the
 = MarketPress Premium =
 MarketPress Lite is a fully functional but limited version of our <a href='http://premium.wpmudev.org/project/e-commerce'>full MarketPress plugin</a>. Here are some of the features you'll get in the premium version available on WPMU DEV:
 
-* Product downloads - sell digital goods!
-* Powerful coupon codes for your store with usage tracking and limits
 * Access to all gateways including:  2Checkout, Authorize.NET AIM, Google Checkout, Moneybookers, and PayPal chained payments
 * More built-in themes, or add your own simple CSS based themes
 * Multisite marketplace features - product lists, tags, categories, widgets, and shortcodes
@@ -66,6 +70,8 @@ The site works for you.  It couldn't be easier to set up and, once you're done, 
 = Fantastic Themes - Made Easy =
 
 Also available on WPMU DEV, you'll find a Parent and Child Theme (more being added all the time).  This provides the perfect scenario of powerful functionality in the admin and gorgeous display of your products on the public side!  <a href='http://premium.wpmudev.org/project/frame-market-theme'>Check them out today!</a>
+
+Our latest *FREE*<a href='http://premium.wpmudev.org/project/simplemarket'>SimpleMarket Theme</a> uses an HTML 5 responsive design so your e-commerce site looks great across all screen-sizes and devices such as smartphones or tablets!
 
 == Installation ==
 = To Install: =
