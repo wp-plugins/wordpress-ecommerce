@@ -1,9 +1,9 @@
 === WordPress eCommerce - MarketPress ===
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
-Requires at least: 3.1
+Requires at least: 3.2
 Tested up to: 3.2.1
-Stable tag: 2.1.3
+Stable tag: trunk
 
 A simple, extensible, eCommerce foundation for your WordPress-powered store.
 
@@ -131,6 +131,18 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+= 2.1.6 =
+* Fix sprintf() bug on paypal-express gateway
+* Fix rare bug with paypal-express gateway where orders were being duplicated across random blogs
+* Usability improvements to settings pages
+* Fix rewrites to ignore base (example /blog/)
+* Up the timeout to 60 seconds for Paypal API requests
+* Fix global cart cookies for some setups
+* Fixes to order arguments for shortcodes and template functions
+* Fix order sort for all old products
+* Fix browse products link in empty cart page
+* Attempt to fix occassional "missed a step" message on checkout confirmation
 
 = 2.1.3 =
 * WP 3.2 compatibility

@@ -222,3 +222,23 @@ div.mp-pro-update {
 	color: red;
 	font-weight: bold;
 }
+#mp-need-help {
+	background: transparent url('../images/need-help.png') no-repeat scroll top left;
+	display: block;
+	width: 272px;
+	height: 119px;
+	position: absolute;
+	z-index: 10;
+	float: right;
+	right: 45px;
+}
+.mp-theme-preview {
+	float: left;
+	width: 45%;
+	margin-right: 5%;
+}
+.mp-theme-preview img {
+	float: left;
+	margin-right: 10px;
+	margin-bottom: 1px;
+}
