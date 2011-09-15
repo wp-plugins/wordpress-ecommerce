@@ -5,73 +5,68 @@ Requires at least: 3.2
 Tested up to: 3.2.1
 Stable tag: trunk
 
-A simple, extensible, eCommerce foundation for your WordPress-powered store.
+The best free ecommerce plugin available for WordPress - easy to use, beautiful & powerful.
 
 == Description ==
 
-MarketPress brings you a solid, simple yet extensible foundation for a WordPress-Powered store.
+MarketPress is the easiest to use, best designed and most powerful ecommerce / shopping cart plugin available for WordPress today.
 
-The first WordPress eCommerce plugin designed from the ground up for seamless integration with WordPress, Multisite and BuddyPress.
+Developed from the ground up to make it **simple** to set up a stylish online shop, MarketPress has all the features you need, including:
 
-We went to great lengths to provide simple shipping and gateway APIs, robust themeing support and a set of completely documented template tags. MarketPress makes full use of custom post types, taxonomies, etc. It creates NO messy custom tables for each blog that crowd your database like other shop plugins out there!
+* Multiple payment gateways (PayPal, Authorize.net, Google checkout, 2checkout, Moneybookers and more)
+* Works great with any WordPress theme and looks great with AJAXy goodness
+* Fully internationalized by the WPML crew
+* Sell real objects, or digital downloads (with limits and tracking!), with ease
+* Shipping, coupons, Google Analytics Ecommerce tracking, sale pricing, unlimited product variations, and so so much more!
+
+And, did you know that MarketPress is also 100% WordPress Multisite and BuddyPress compatible - so **you can use it to start your own Etsy or Ebay style network of stores... where you take a % on each sale!!!**
+
+So, what are you waiting for, download MarketPress today and give it a crack.
+
+We guarantee you'll enjoy it right out of the box... although we provide comprehensive documentation and support if you need it :)
 [youtube http://www.youtube.com/watch?v=Wa8fUFKwl-k&hd=1]
 
-= NEW MarketPress Features: =
-* Digital Downloads!
-* Coupon Creation - Discount by percentage or dollar amount.  Easily limit number of coupons available and expiration dates!
-* Google Analytics Ecommerce
-* Full WPML translation capability
+Or, read on to find out more about what you can get from MarketPress...
 
-= More MarketPress Features: =
-* Simple product thumbnails/images with lightbox zooming
-* Add temporary sale prices
-* Downloadable/digital products with limits and tracking - NOW IN THE LITE VERSION!
-* Full coupon/discount support. Create coupon codes for percentage or amount off, and control and track their usage date range and/or maximum uses - NOW IN THE LITE VERSION!
+= Sick of WP-ecommerce? =
+One of the main reasons we developed MarketPress was because, basically, all of the existing WordPress ecommerce plugins out there offer a pretty awful user experience. Especially WP-ecommerce, so we built a complete importer - allowing you to easily import your troublesome WP ecommerce store into MarketPress... hurrah!
+
+= Want to make your product listings look amazing? =
+MarketPress is 100% customizable, but in case you don't want to get stuck into all that CSS, it comes with:
+
+* Amazing themes (that you can customize without knowing a single line of code)
+* Beautiful preset CSS styles
+* Powerful, yet elegant, widgets
+* Hot product thumbnails/images with lightbox zooming
+
+And when it comes to the actual sales, we've got every feature you could ask for, including (but not limited to):
+
+* Payment gateways coming out of our ears
+* 100% ready for easy translation into any language
+* Supports all major currencies
+* Ready to go for tax and VAT
+* Digital or physical objects
+* Multiple shipping options
+* Coupons, discounts and affiliate ready
+* Fully integrated with Google Analytics eCommerce
 * Unlimited product variations
 * Stock tracking and alerts per variation
 * Per order product limits
 * AJAX cart and cart widget
-* Powerful widgets and shortcodes for displaying your products just how you want
-* Link a product to an external link (for affiliate commissions, etc). You can also turn off all checkout features and use MarketPress as a listing plugin only, generating revenue from affiliate commissions on sites like ClickBank, E-junkie or Amazon Affiliate.
-* Assign categories and tags to products to make them easy to find
-* Stock tracking with alerts
-* Order Management/Alerts
-* Fully customizable email messages
-* Full support for most major currencies
-* Flexible sales tax/VAT options
-* 3 built-in css themes designed to work within your site theme - Premium Version only!
-* Fully customizable store urls/slugs
-* Customers can checkout without being a site user
-* Order status tracking for customers on the front end. Previous orders are stored in a cookie and/or user meta.
-* More quality features than any other WordPress e-commerce plugin.
+* Powerful shortcodes that you can use anywhere
+* Link any product to an external link (helooo Amazon affiliates!)
+* Categories and tags
+* Stock tracking and order management and alerts
+* Fully customizable urls
+* Checkout *without* having to be a site user
+* Start your own Etsy shopping network
+* Global shopping carts (for that network)
 
-* Multiple popular payment gateways - Premium Version only!
+And that's really just the beginning, there's so much more, but the only way you'll get to find out about that is to try it...
 
-= MarketPress Premium =
-MarketPress Lite is a fully functional but limited version of our <a href='http://premium.wpmudev.org/project/e-commerce'>full MarketPress plugin</a>. Here are some of the features you'll get in the premium version available on WPMU DEV:
+We guarantee that it's simply the best - what else would you expect from WPMU DEV!
 
-* Access to all gateways including:  2Checkout, Authorize.NET AIM, Google Checkout, Moneybookers, and PayPal chained payments
-* More built-in themes, or add your own simple CSS based themes
-* Multisite marketplace features - product lists, tags, categories, widgets, and shortcodes
-* Charge for store upgrades like themes and gateways with our Supporter plugin
-* Global Shopping Carts
-* Ability for Network owner to take a percentage of each marketplace sale through the PayPal chained payment gateway
-* Import digital download products from WP e-Commerce right into MarketPress
-
-<a href='http://premium.wpmudev.org/project/e-commerce'>**Upgrade to the full version now &raquo;**</a>
-
-= Make More Money with Multisite and MarketPress Combined! =
-Selling your products online is the number one way to make money using WordPress. MarketPress does this expertly for a single user WordPress site. It has also been built specifically to allow you to create a network of stores with Multisite and exponentially increases the profits you can be making with your site.
-
-It does this by allowing you create your own WordPress Network of shops (premium version only), enabling you to take a pre-defined percentage fee on each transaction.  You provide the service of allowing folks to create an entire store with the ease and familiarity of WordPress - and for your efforts you can dictate the percentage provided to you automatically from each transition.
-
-The site works for you.  It couldn't be easier to set up and, once you're done, the automated process allows you to make money while your attention can be diverted elsewhere.  It works for Etsy.  It works for Shoppify.  Now it can work for you!
-
-= Fantastic Themes - Made Easy =
-
-Also available on WPMU DEV, you'll find a Parent and Child Theme (more being added all the time).  This provides the perfect scenario of powerful functionality in the admin and gorgeous display of your products on the public side!  <a href='http://premium.wpmudev.org/project/frame-market-theme'>Check them out today!</a>
-
-Our latest *FREE*<a href='http://premium.wpmudev.org/project/simplemarket'>SimpleMarket Theme</a> uses an HTML 5 responsive design so your e-commerce site looks great across all screen-sizes and devices such as smartphones or tablets!
+<a href="http://premium.wpmudev.org/project/e-commerce-lite">Download the free version</a> | <a href="http://premium.wpmudev.org/project/e-commerce">Download the pro version</a>
 
 == Installation ==
 = To Install: =
