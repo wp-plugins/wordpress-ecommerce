@@ -36,7 +36,7 @@ MarketPress is 100% customizable, but in case you don't want to get stuck into a
 
 * Amazing themes (that you can customize without knowing a single line of code)
 * Beautiful preset CSS styles
-* Powerful, yet elegant, widgets
+* Powerful, yet elegant, widgets 
 * Hot product thumbnails/images with lightbox zooming
 
 And when it comes to the actual sales, we've got every feature you could ask for, including (but not limited to):
@@ -143,7 +143,7 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 * Update chained payments documentation
 * Add Turkish lira to PayPal gateways
 * Make shipping info available to search for on orders page. http://premium.wpmudev.org/forums/topic/search-store-orders-by-name-bug
-* Add JS to dropdown categories shortcode
+* Add JS to drop-down categories shortcode
 * Fix missing title on product list pages
 * Fix title incompatibility with Genesis & Catalyst framework based themes
 * Style fixes to icons CSS theme
