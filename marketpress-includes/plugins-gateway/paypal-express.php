@@ -601,6 +601,7 @@ class MP_Gateway_Paypal_Express extends MP_Gateway_API {
               'ES'	=> 'Spain',
               'SE'	=> 'Sweden',
               'CH'	=> 'Switzerland',
+							'TR' 	=> 'Turkey',
               'GB'	=> 'United Kingdom',
               'US'	=> 'United States'
             );
@@ -641,6 +642,7 @@ class MP_Gateway_Paypal_Express extends MP_Gateway_API {
 	              'SGD' => 'SGD - Singapore Dollar',
 	              'TWD' => 'TWD - Taiwan New Dollars',
 	              'THB' => 'THB - Thai Baht',
+								'TRY' => 'TRY - Turkish lira',
 	              'USD' => 'USD - U.S. Dollar'
 	          );
 
@@ -669,7 +671,7 @@ class MP_Gateway_Paypal_Express extends MP_Gateway_API {
 	        <tr<?php echo ($mp->global_cart) ? ' style="display:none;"' : ''; ?>>
 					<th scope="row"><?php _e('PayPal API Credentials', 'mp') ?></th>
 					<td>
-	  				<span class="description"><?php _e('You must login to PayPal and create an API signature to get your credentials. <a target="_blank" href="https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_NVPAPIBasics#id084DN0AK0HS">Instructions &raquo;</a>', 'mp') ?></span>
+	  				<span class="description"><?php _e('You must login to PayPal and create an API signature to get your credentials. <a target="_blank" href="https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_ECAPICredentials">Instructions &raquo;</a>', 'mp') ?></span>
 	          <p><label><?php _e('API Username', 'mp') ?><br />
 	          <input value="<?php echo esc_attr($settings['gateways']['paypal-express']['api_user']); ?>" size="30" name="mp[gateways][paypal-express][api_user]" type="text" />
 	          </label></p>
@@ -759,6 +761,7 @@ class MP_Gateway_Paypal_Express extends MP_Gateway_API {
       $args['user-agent'] = "MarketPress/{$mp->version}: http://premium.wpmudev.org/project/e-commerce | PayPal Express Plugin/{$mp->version}";
       $args['body'] = $req;
       $args['sslverify'] = false;
+			$args['timeout'] = 30;
 
       //use built in WP http class to work with most server setups
     	$response = wp_remote_post($domain, $args);
@@ -916,7 +919,11 @@ class MP_Gateway_Paypal_Express extends MP_Gateway_API {
 				switch_to_blog($bid);
       }
       $blog_settings = get_option('mp_settings');
-
+			
+			//if a seller hasn't configured paypal skip
+			if ( empty($blog_settings['gateways']['paypal-express']['merchant_email']) )
+				continue;
+			
       $totals = array();
 
       $nvpstr .= "&PAYMENTREQUEST_{$j}_SELLERID=" . $bid;
@@ -924,22 +931,29 @@ class MP_Gateway_Paypal_Express extends MP_Gateway_API {
       $nvpstr .= "&PAYMENTREQUEST_{$j}_PAYMENTACTION=" . $this->payment_action;
       $nvpstr .= "&PAYMENTREQUEST_{$j}_CURRENCYCODE=" . $this->currencyCode;
       $nvpstr .= "&PAYMENTREQUEST_{$j}_NOTIFYURL=" . $this->ipn_url;  //this is supposed to be in DoExpressCheckoutPayment, but I put it here as well as docs are lacking
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTONAME=" . urlencode($shipping_info['name']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOSTREET=" . urlencode($shipping_info['address1']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOSTREET2=" . urlencode($shipping_info['address2']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOCITY=" . urlencode($shipping_info['city']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOSTATE=" . urlencode($shipping_info['state']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOCOUNTRY=" . urlencode($shipping_info['country']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOZIP=" . urlencode($shipping_info['zip']);
-      $nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOPHONENUM=" . urlencode($shipping_info['phone']);
+			
+			if (!$mp->download_only_cart($cart)) {
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTONAME=" . urlencode($shipping_info['name']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOSTREET=" . urlencode($shipping_info['address1']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOSTREET2=" . urlencode($shipping_info['address2']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOCITY=" . urlencode($shipping_info['city']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOSTATE=" . urlencode($shipping_info['state']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOCOUNTRY=" . urlencode($shipping_info['country']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOZIP=" . urlencode($shipping_info['zip']);
+				$nvpstr .= "&PAYMENTREQUEST_{$j}_SHIPTOPHONENUM=" . urlencode($shipping_info['phone']);
+			}
 
       $detailstr = "";
       $i = 0;
       foreach ($cart as $product_id => $variations) {
         foreach ($variations as $variation => $data) {
-				  $totals[] = $data['price'] * $data['quantity'];
+					//skip free products to avoid paypal error
+					if ($data['price'] <= 0)
+						continue;
+					
+				  $totals[] = $mp->before_tax_price($data['price']) * $data['quantity'];
 				  $detailstr .= "&L_PAYMENTREQUEST_{$j}_NAME$i=" . urlencode($data['name']);
-				  $detailstr .= "&L_PAYMENTREQUEST_{$j}_AMT$i=" . urlencode($data['price']);
+				  $detailstr .= "&L_PAYMENTREQUEST_{$j}_AMT$i=" . urlencode($mp->before_tax_price($data['price']));
 				  $detailstr .= "&L_PAYMENTREQUEST_{$j}_NUMBER$i=" . urlencode($data['SKU']);
 				  $detailstr .= "&L_PAYMENTREQUEST_{$j}_QTY$i=" . urlencode($data['quantity']);
 				  $detailstr .= "&L_PAYMENTREQUEST_{$j}_ITEMURL$i=" . urlencode($data['url']);
@@ -1293,7 +1307,7 @@ function pe_network_gateway_settings_box($settings) {
         <tr>
 				<th scope="row"><?php _e('PayPal API Credentials', 'mp') ?></th>
 				<td>
-  				<span class="description"><?php _e('You must login to PayPal and create an API signature to get your credentials. <a target="_blank" href="https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_NVPAPIBasics#id084DN0AK0HS">Instructions &raquo;</a>', 'mp') ?></span>
+  				<span class="description"><?php _e('You must login to PayPal and create an API signature to get your credentials. <a target="_blank" href="https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_ECAPICredentials">Instructions &raquo;</a>', 'mp') ?></span>
           <p><label><?php _e('API Username', 'mp') ?><br />
           <input value="<?php echo esc_attr(($settings['gateways']['paypal-express']['api_user']) ? $settings['gateways']['paypal-express']['api_user'] : $blog_settings['gateways']['paypal-express']['api_user']); ?>" size="30" name="mp[gateways][paypal-express][api_user]" type="text" />
           </label></p>

@@ -312,7 +312,7 @@ $this->uk_counties = array("Aberdeenshire"=>"Aberdeenshire","Angus/Forfarshire"=
 "Denbighshire"=>"Denbighshire","Derbyshire"=>"Derbyshire","Devon"=>"Devon","Dorset"=>"Dorset",
 "Dumfriesshire"=>"Dumfriesshire","Dunbartonshire/Dumbartonshire"=>"Dunbartonshire/Dumbartonshire",
 "Durham"=>"Durham","East Lothian/Haddingtonshire"=>"East Lothian/Haddingtonshire","Essex"=>"Essex","Fife"=>"Fife",
-"Flintshire"=>"Flintshire","Gloucestershire"=>"Gloucestershire","Greater Manchester"=>"Greater Manchester","Gwynedd"=>"Gwynedd","Hampshire"=>"Hampshire",
+"Flintshire"=>"Flintshire","Gloucestershire"=>"Gloucestershire","Greater London"=>"Greater London","Greater Manchester"=>"Greater Manchester","Gwynedd"=>"Gwynedd","Hampshire"=>"Hampshire",
 "Herefordshire"=>"Herefordshire","Hertfordshire"=>"Hertfordshire","Huntingdonshire"=>"Huntingdonshire",
 "Inverness-shire"=>"Inverness-shire","Isle of Anglesey"=>"Isle of Anglesey","Kent"=>"Kent",
 "Kincardineshire"=>"Kincardineshire","Kinross-shire"=>"Kinross-shire","Kirkcudbrightshire"=>"Kirkcudbrightshire",
@@ -393,7 +393,8 @@ $this->eu_countries = array(
   'SE'
 );
 
-//currency list
+//currency list - http://www.xe.com/symbols.php
+//last perameter is symbol which is unicode hex: http://www.mikezilla.com/exp0012.html
 $this->currencies = array(
   "ALL"=> array("Albania, Leke", "4c, 65, 6b"),
   "AFN"=> array("Afghanistan, Afghanis", "60b"),
@@ -431,6 +432,7 @@ $this->currencies = array(
   "EUR"=> array("Euro", "20ac"),
   "FKP"=> array("Falkland Islands, Pounds", "a3"),
   "FJD"=> array("Fiji, Dollars", "24"),
+  "GEL"=> array("Georgia, lari", "6c, 61, 72, 69"),
   "GHC"=> array("Ghana, Cedis", "a2"),
   "GIP"=> array("Gibraltar, Pounds", "a3"),
   "GTQ"=> array("Guatemala, Quetzales", "51"),
@@ -503,6 +505,7 @@ $this->currencies = array(
   "TRL"=> array("Turkey, Liras", "20a4"),
   "TVD"=> array("Tuvalu, Dollars", "24"),
   "UAH"=> array("Ukraine, Hryvnia", "20b4"),
+  "AED"=> array("United Arab Emirates, dirhams", "64, 68"),
   "GBP"=> array("United Kingdom, Pounds", "a3"),
   "USD"=> array("United States of America, Dollars", "24"),
   "UYU"=> array("Uruguay, Pesos", "24, 55"),
@@ -512,7 +515,9 @@ $this->currencies = array(
   "XAF"=> array("BEAC, CFA Francs", "46, 43, 46, 41"),
   "XOF"=> array("BCEAO, CFA Francs", "46, 43, 46, 41"),
   "YER"=> array("Yemen, Rials", "fdfc"),
-  "ZWD"=> array("Zimbabwe, Zimbabwe Dollars", "5a, 24")
+  "ZWD"=> array("Zimbabwe, Zimbabwe Dollars", "5a, 24"),
+	"POINTS"=> array("Points (for point based stores)", "50, 6f, 69, 6e, 74, 73"),
+	"CREDITS"=> array("Credits (for credit based stores)", "43, 72, 65, 64, 69, 74, 73")
 );
 
 ?>

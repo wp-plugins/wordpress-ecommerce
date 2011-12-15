@@ -125,7 +125,18 @@ function mp_dropdown_categories( $echo = true, $args = '' ) {
   $args['id'] = 'mp_category_dropdown';
 
   $dropdown = wp_dropdown_categories( $args );
-
+  $dropdown .= '<script type="text/javascript">
+/* <![CDATA[ */
+	var dropdown = document.getElementById("mp_category_dropdown");
+	function onCatChange() {
+		if ( dropdown.options[dropdown.selectedIndex].value > 0 ) {
+			location.href = "<?php echo home_url(); ?>/?product_category="+dropdown.options[dropdown.selectedIndex].value;
+		}
+	}
+	dropdown.onchange = onCatChange;
+/* ]]> */
+</script>';
+  
   if ($echo)
     echo $dropdown;
   else
@@ -194,7 +205,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
       foreach ($cart as $product_id => $variations) {
         foreach ($variations as $variation => $data) {
-          $totals[] = $data['price'] * $data['quantity'];
+          $totals[] = $mp->before_tax_price($data['price']) * $data['quantity'];
 
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 50 ) . '</td>';
@@ -291,7 +302,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
       foreach ($cart as $product_id => $variations) {
         foreach ($variations as $variation => $data) {
-          $totals[] = $data['price'] * $data['quantity'];
+          $totals[] = $mp->before_tax_price($data['price']) * $data['quantity'];
 
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 75 ) . '</td>';
@@ -403,7 +414,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 function _mp_cart_login($echo = false) {
   global $mp;
   $settings = get_option('mp_settings');
-
+  
   $content = '';
   //don't show if logged in
   if ( is_user_logged_in() || defined('MP_HIDE_LOGIN_OPTION') ) {
@@ -469,6 +480,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
   if (!$country)
     $country = $settings['base_country'];
   $phone = (!empty($_SESSION['mp_shipping_info']['phone'])) ? $_SESSION['mp_shipping_info']['phone'] : $meta['phone'];
+  $special_instructions = (!empty($_SESSION['mp_shipping_info']['special_instructions'])) ? $_SESSION['mp_shipping_info']['special_instructions'] : '';
 
   $content = '';
   //don't show if logged in
@@ -485,7 +497,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
 
     $content .= '<table class="mp_cart_shipping">';
     $content .= '<thead><tr>';
-    $content .= '<th colspan="2">'.__('Enter Your Shipping Information:', 'mp').'</th>';
+    $content .= '<th colspan="2">'.($mp->download_only_cart($mp->get_cart_contents()) ? __('Enter Your Checkout Information:', 'mp') : __('Enter Your Shipping Information:', 'mp')).'</th>';
     $content .= '</tr></thead>';
     $content .= '<tbody>';
     $content .= '<tr>';
@@ -493,54 +505,64 @@ function _mp_cart_shipping($editable = false, $echo = false) {
     $content .= apply_filters( 'mp_checkout_error_email', '' );
     $content .= '<input size="35" name="email" type="text" value="'.esc_attr($email).'" /></td>';
     $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'. __('Full Name:', 'mp').'*</td><td>';
-    $content .= apply_filters( 'mp_checkout_error_name', '' );
-    $content .= '<input size="35" name="name" type="text" value="'.esc_attr($name).'" /> </td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'. __('Address:', 'mp').'*</td><td>';
-    $content .= apply_filters( 'mp_checkout_error_address1', '' );
-    $content .= '<input size="45" name="address1" type="text" value="'.esc_attr($address1).'" /><br />';
-    $content .= '<small><em>'. __('Street address, P.O. box, company name, c/o', 'mp').'</em></small>';
-    $content .= '</td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'. __('Address 2:', 'mp').'&nbsp;</td><td>';
-    $content .= '<input size="45" name="address2" type="text" value="'.esc_attr($address2).'" /><br />';
-    $content .= '<small><em>'.__('Apartment, suite, unit, building, floor, etc.', 'mp').'</em></small>';
-    $content .= '</td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'.__('City:', 'mp').'*</td><td>';
-    $content .= apply_filters( 'mp_checkout_error_city', '' );
-    $content .= '<input size="25" name="city" type="text" value="'.esc_attr($city).'" /></td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'.__('State/Province/Region:', 'mp').'*</td><td>';
-    $content .= apply_filters( 'mp_checkout_error_state', '' );
-    $content .= '<input size="15" name="state" type="text" value="'.esc_attr($state).'" /></td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'.__('Postal/Zip Code:', 'mp').'*</td><td>';
-    $content .= apply_filters( 'mp_checkout_error_zip', '' );
-    $content .= '<input size="10" id="mp_zip" name="zip" type="text" value="'.esc_attr($zip).'" /></td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'.__('Country:', 'mp').'*</td><td>';
-    $content .= apply_filters( 'mp_checkout_error_country', '' );
-    $content .= '<select id="mp_country" name="country">';
-    foreach ((array)$settings['shipping']['allowed_countries'] as $code) {
-      $content .= '<option value="'.$code.'"'.selected($country, $code, false).'>'.esc_attr($mp->countries[$code]).'</option>';
+    
+    if (!$mp->download_only_cart($mp->get_cart_contents())) {
+      $content .= '<tr>';
+      $content .= '<td align="right">'. __('Full Name:', 'mp').'*</td><td>';
+      $content .= apply_filters( 'mp_checkout_error_name', '' );
+      $content .= '<input size="35" name="name" type="text" value="'.esc_attr($name).'" /> </td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'.__('Country:', 'mp').'*</td><td>';
+      $content .= apply_filters( 'mp_checkout_error_country', '' );
+      $content .= '<select id="mp_country" name="country">';
+      foreach ((array)$settings['shipping']['allowed_countries'] as $code) {
+        $content .= '<option value="'.$code.'"'.selected($country, $code, false).'>'.esc_attr($mp->countries[$code]).'</option>';
+      }
+      $content .= '</select>';
+      $content .= '</td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'. __('Address:', 'mp').'*</td><td>';
+      $content .= apply_filters( 'mp_checkout_error_address1', '' );
+      $content .= '<input size="45" name="address1" type="text" value="'.esc_attr($address1).'" /><br />';
+      $content .= '<small><em>'. __('Street address, P.O. box, company name, c/o', 'mp').'</em></small>';
+      $content .= '</td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'. __('Address 2:', 'mp').'&nbsp;</td><td>';
+      $content .= '<input size="45" name="address2" type="text" value="'.esc_attr($address2).'" /><br />';
+      $content .= '<small><em>'.__('Apartment, suite, unit, building, floor, etc.', 'mp').'</em></small>';
+      $content .= '</td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'.__('City:', 'mp').'*</td><td>';
+      $content .= apply_filters( 'mp_checkout_error_city', '' );
+      $content .= '<input size="25" name="city" type="text" value="'.esc_attr($city).'" /></td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'.__('State/Province/Region:', 'mp').'*</td><td id="mp_province_field">';
+      $content .= apply_filters( 'mp_checkout_error_state', '' );
+      $content .= mp_province_field($country, $state).'</td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'.__('Postal/Zip Code:', 'mp').'*</td><td>';
+      $content .= apply_filters( 'mp_checkout_error_zip', '' );
+      $content .= '<input size="10" id="mp_zip" name="zip" type="text" value="'.esc_attr($zip).'" /></td>';
+      $content .= '</tr>';
+      $content .= '<tr>';
+      $content .= '<td align="right">'.__('Phone Number:', 'mp').'</td><td>';
+      $content .= '<input size="20" name="phone" type="text" value="'.esc_attr($phone).'" /></td>';
+      $content .= '</tr>';
     }
-    $content .= '</select>';
-    $content .= '</td>';
-    $content .= '</tr>';
-    $content .= '<tr>';
-    $content .= '<td align="right">'.__('Phone Number:', 'mp').'</td><td>';
-    $content .= '<input size="20" name="phone" type="text" value="'.esc_attr($phone).'" /></td>';
-    $content .= '</tr>';
-
+    
+    if ($settings['special_instructions']) {
+      $content .= '<tr>';
+      $content .= '<td align="right">'.__('Special Instructions:', 'mp').'</td><td>';
+      $content .= '<textarea name="special_instructions" rows="2" style="width: 100%;">'.esc_textarea($special_instructions).'</textarea></td>';
+      $content .= '</tr>';
+    }
+    
     $content .= apply_filters( 'mp_checkout_shipping_field', '' );
 
     $content .= '</tbody>';
@@ -552,7 +574,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
     $content .= '</p>';
     $content .= '</form>';
 
-  } else { //is not editable
+  } else if (!$mp->download_only_cart($mp->get_cart_contents())) { //is not editable and not download only
 
     $content .= '<table class="mp_cart_shipping">';
     $content .= '<thead><tr>';
@@ -971,9 +993,23 @@ function mp_order_status() {
         <td><?php echo esc_attr($order->mp_shipping_info['phone']); ?></td>
       	</tr>
         <?php } ?>
+        
+        <?php if (isset($order->mp_shipping_info['tracking_num'])) { ?>
+      	<tr>
+      	<td align="right"><?php _e('Tracking Number:', 'mp'); ?></td>
+        <td><?php echo mp_tracking_link($order->mp_shipping_info['tracking_num'], $order->mp_shipping_info['method']); ?></td>
+      	</tr>
+        <?php } ?>
       </table>
       <?php } ?>
-
+      
+      <?php if (isset($order->mp_order_notes)) { ?>
+      <h3><?php _e('Order Notes:', 'mp'); ?></h3>
+      <?php echo wpautop($order->mp_order_notes); ?>
+      <?php } ?>
+      
+      <?php do_action('mp_order_status_output', $order); ?>
+      
       <?php mp_orderstatus_link(true, false, __('&laquo; Back', 'mp')); ?>
       <?php
 
@@ -1079,8 +1115,65 @@ function mp_order_status() {
   }
 }
 
+/*
+ * function mp_tracking_link
+ * @param string $tracking_number The tracking number string to turn into a link
+ * @param string $method Shipping method, can be UPS, FedEx, USPS, DHL, or other (default)
+ */
+function mp_tracking_link($tracking_number, $method = 'other') {
+  $tracking_number = esc_attr($tracking_number);
+  if ($method == 'UPS')
+    return '<a title="'.__('Track your UPS package &raquo;', 'mp').'" href="http://wwwapps.ups.com/WebTracking/processInputRequest?sort_by=status&tracknums_displayed=1&TypeOfInquiryNumber=T&loc=en_us&InquiryNumber1='.$tracking_number.'&track.x=0&track.y=0" target="_blank">'.$tracking_number.'</a>';
+  else if ($method == 'FedEx')
+    return '<a title="'.__('Track your FedEx package &raquo;', 'mp').'" href="http://www.fedex.com/Tracking?language=english&cntry_code=us&tracknumbers='.$tracking_number.'" target="_blank">'.$tracking_number.'</a>';
+  else if ($method == 'USPS')
+    return '<a title="'.__('Track your USPS package &raquo;', 'mp').'" href="http://trkcnfrm1.smi.usps.com/PTSInternetWeb/InterLabelInquiry.do?origTrackNum='.$tracking_number.'" target="_blank">'.$tracking_number.'</a>';
+  else if ($method == 'DHL')
+    return '<a title="'.__('Track your DHL package &raquo;', 'mp').'" href="http://www.dhl.com/content/g0/en/express/tracking.shtml?brand=DHL&AWB='.$tracking_number.'" target="_blank">'.$tracking_number.'</a>';
+  else
+    return $tracking_number;
+}
 
 /*
+ * function mp_province_field
+ * @param string $country two-digit country code
+ * @param string $selected state code form value to be shown/selected
+ */
+function mp_province_field($country = 'US', $selected = null) {
+  global $mp;
+  
+  if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['country']))
+    $country = $_POST['country'];
+  
+  $list = false;
+  if ($country == 'US')
+    $list = $mp->usa_states;
+  else if ($country == 'CA')
+    $list = $mp->canadian_provinces;
+  else if ($country == 'AU')
+    $list = $mp->australian_states;
+  
+  $content = ''; 
+  if ($list) {
+    $content .= '<select id="mp_state" name="state">';
+    $content .= '<option value="">'.__('Select:', 'mp').'</option>';
+    foreach ($list as $abbr => $label)
+      $content .= '<option value="'.$abbr.'"'.selected($selected, $abbr, false).'>'.esc_attr($label).'</option>';
+    $content .= '</select>';
+  } else {
+    $content .= '<input size="15" id="mp_state" name="state" type="text" value="'.esc_attr($selected).'" />'; 
+  }
+
+  //if ajax 
+  if (defined('DOING_AJAX') && DOING_AJAX)
+    die($content);
+  else
+    return $content;
+}
+
+
+/*
+ * function mp_list_products
  * Displays a list of products according to preference. Optional values default to the values in Presentation Settings -> Product List
  *
  * @param bool $echo Optional, whether to echo or return
@@ -1514,11 +1607,15 @@ function mp_product_image( $echo = true, $context = 'list', $post_id = NULL, $si
       return '';
 
     //size
-    if ($settings['list_img_size'] == 'custom')
-      $size = array($settings['list_img_width'], $settings['list_img_height']);
-    else
-      $size = $settings['list_img_size'];
-
+    if (intval($size)) {
+      $size = array(intval($size), intval($size));
+    } else {
+      if ($settings['list_img_size'] == 'custom')
+        $size = array($settings['list_img_width'], $settings['list_img_height']);
+      else
+        $size = $settings['list_img_size'];
+    }
+    
     //link
     $link = get_permalink($post_id);
 

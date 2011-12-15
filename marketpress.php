@@ -1,11 +1,12 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.1.6
+Version: 2.4.1
 Plugin URI: http://premium.wpmudev.org/project/e-commerce-lite
 Description: The lite version of our complete WordPress ecommerce plugin. Activate the plugin, adjust your <a href="edit.php?post_type=product&amp;page=marketpress">settings</a> then <a href="post-new.php?post_type=product">add some products</a> to your store.
 Author: Aaron Edwards (Incsub)
 Author URI: http://uglyrobot.com
+Text Domain: mp
 WDP ID: 220
 
 Copyright 2009-2011 Incsub (http://incsub.com)
@@ -26,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class MarketPress {
 
-  var $version = '2.1.6';
+  var $version = '2.4.1';
   var $location;
   var $plugin_dir = '';
   var $plugin_url = '';
@@ -41,6 +42,7 @@ class MarketPress {
   var $cart_cache = false;
   var $is_shop_page = false;
   var $global_cart = false;
+	var $skip_shipping_notice = false;
 
   function MarketPress() {
     $this->__construct();
@@ -96,7 +98,7 @@ class MarketPress {
 		add_action( 'admin_print_styles', array(&$this, 'admin_css') );
 		add_action( 'admin_print_scripts', array(&$this, 'admin_script_post') );
     add_action( 'admin_notices', array(&$this, 'admin_nopermalink_warning') );
-		add_filter( 'plugin_action_links', array(&$this, 'plugin_action_link'), 10, 2);
+		add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array(&$this, 'plugin_action_link'), 10, 2);
 		add_action( 'wp_ajax_mp-hide-help', array(&$this, 'hide_help') );
 
 		//Meta boxes
@@ -122,6 +124,9 @@ class MarketPress {
     /* use both actions so logged in and not logged in users can send this AJAX request */
     add_action( 'wp_ajax_nopriv_mp-update-cart', array(&$this, 'update_cart') );
     add_action( 'wp_ajax_mp-update-cart', array(&$this, 'update_cart') );
+		add_action( 'wp_ajax_mp-province-field', 'mp_province_field' ); //province field callback for shipping form
+		add_action( 'wp_ajax_nopriv_mp-province-field', 'mp_province_field' );
+		add_action( 'wp_logout', array(&$this, 'logout_clear_session') ); //see http://premium.wpmudev.org/forums/topic/security-issue-with-marketpress
 
 		//Relies on post thumbnails for products
 		add_action( 'after_setup_theme', array(&$this, 'post_thumbnails'), 9999 );
@@ -166,6 +171,7 @@ class MarketPress {
       'max_downloads' => 5,
       'force_login' => 0,
       'ga_ecommerce' => 'none',
+			'special_instructions' => 0,
       'store_theme' => 'icons',
       'product_img_height' => 150,
       'product_img_width' => 150,
@@ -233,6 +239,8 @@ SHIPPINGINFO
 Payment Information:
 PAYMENTINFO
 
+ORDERNOTES
+
 You can track the latest status of your order here: TRACKINGURL
 
 Thanks again!", 'mp'),
@@ -250,6 +258,8 @@ SHIPPINGINFO
 
 Payment Information:
 PAYMENTINFO
+
+ORDERNOTES
 
 You can track the latest status of your order here: TRACKINGURL
 
@@ -332,11 +342,11 @@ Thanks again!", 'mp')
     if (defined('WP_PLUGIN_URL') && defined('WP_PLUGIN_DIR') && file_exists(WP_PLUGIN_DIR . '/wordpress-ecommerce/' . basename(__FILE__))) {
       $this->location = 'subfolder-plugins';
       $this->plugin_dir = WP_PLUGIN_DIR . '/wordpress-ecommerce/marketpress-includes/';
-      $this->plugin_url = WP_PLUGIN_URL . '/wordpress-ecommerce/marketpress-includes/';
+			$this->plugin_url = plugins_url( '/marketpress-includes/', __FILE__ );
   	} else if (defined('WP_PLUGIN_URL') && defined('WP_PLUGIN_DIR') && file_exists(WP_PLUGIN_DIR . '/' . basename(__FILE__))) {
       $this->location = 'plugins';
       $this->plugin_dir = WP_PLUGIN_DIR . '/marketpress-includes/';
-      $this->plugin_url = WP_PLUGIN_URL . '/marketpress-includes/';
+			$this->plugin_url = plugins_url( '/marketpress-includes/', __FILE__ );
   	} else if (is_multisite() && defined('WPMU_PLUGIN_URL') && defined('WPMU_PLUGIN_DIR') && file_exists(WPMU_PLUGIN_DIR . '/' . basename(__FILE__))) {
       $this->location = 'mu-plugins';
       $this->plugin_dir = WPMU_PLUGIN_DIR . '/marketpress-includes/';
@@ -362,7 +372,7 @@ Thanks again!", 'mp')
   function load_plugins() {
     $settings = get_option('mp_settings');
 
-    if (!$settings['disable_cart']) {
+    if (is_network_admin() || !$settings['disable_cart']) {
       //load shipping plugin API
       require_once( $this->plugin_dir . 'marketpress-shipping.php' );
       $this->load_shipping_plugins();
@@ -507,25 +517,15 @@ Thanks again!", 'mp')
     if ( current_user_can('manage_options') && !get_option('permalink_structure') )
       echo '<div class="error"><p>'.__('You must enable Pretty Permalinks</a> to use MarketPress - <a href="options-permalink.php">Enable now &raquo;</a>', 'mp').'</p></div>';
 	}
-
+		
 	function plugin_action_link($links, $file) {
-    static $this_plugin;
-
-    if (!$this_plugin) {
-      $this_plugin = plugin_basename(__FILE__);
-    }
-
-    // check to make sure we are on the correct plugin
-    if ($file == $this_plugin) {
-			// the anchor tag and href to the URL we want. For a "Settings" link, this needs to be the url of your settings page
-			$settings_link = '<a href="' . admin_url('edit.php?post_type=product&page=marketpress') . '">' . __('Settings', 'mp') . '</a>';
-			// add the link to the list
-			array_unshift($links, $settings_link);
-    }
-
+		// the anchor tag and href to the URL we want. For a "Settings" link, this needs to be the url of your settings page
+		$settings_link = '<a href="' . admin_url('edit.php?post_type=product&page=marketpress') . '">' . __('Settings', 'mp') . '</a>';
+		// add the link to the list
+		array_unshift($links, $settings_link);
     return $links;
 	}
-
+	
   function add_menu_items() {
     $settings = get_option('mp_settings');
 
@@ -571,7 +571,7 @@ Thanks again!", 'mp')
     //only load languages for datepicker if not english (or it will show Chinese!)
     if ($this->language != 'en')
       wp_enqueue_script( 'jquery-datepicker-i18n', $this->plugin_url . 'datepicker/js/datepicker-i18n.min.js', array('jquery', 'jquery-ui-core', 'jquery-datepicker'), $this->version);
-
+		
 		$settings = get_option('mp_settings');
 		if (intval($settings['hide_popup']) < 3) {
 			wp_enqueue_script( 'mp-need-help', $this->plugin_url . 'js/need-help.js', array('jquery'), $this->version);
@@ -579,14 +579,14 @@ Thanks again!", 'mp')
 			update_option('mp_settings', $settings);
 		}
 	}
-
+	
 	//ties into the ajax request to disable help popup if clicked
 	function hide_help() {
 		$settings = get_option('mp_settings');
 		$settings['hide_popup'] = 3;
 		update_option('mp_settings', $settings);
 	}
-
+	
   //ajax cart handling for store frontend
   function store_script() {
 		//disable ajax cart if incompatible by domain mapping plugin settings
@@ -597,13 +597,8 @@ Thanks again!", 'mp')
     wp_enqueue_script( 'mp-store-js', $this->plugin_url . 'js/store.js', array('jquery'), $this->version );
 
     // declare the variables we need to access in js
-    wp_localize_script( 'mp-store-js', 'MP_Ajax', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'emptyCartMsg' => __('Are you sure you want to remove all items from your cart?', 'mp'), 'successMsg' => __('Item(s) Added!', 'mp'), 'imgUrl' => $this->plugin_url.'images/loading.gif', 'addingMsg' => __('Adding to your cart...', 'mp'), 'outMsg' => __('Out of Stock', 'mp') ) );
+    wp_localize_script( 'mp-store-js', 'MP_Ajax', array( 'ajaxUrl' => admin_url( 'admin-ajax.php' ), 'emptyCartMsg' => __('Are you sure you want to remove all items from your cart?', 'mp'), 'successMsg' => __('Item(s) Added!', 'mp'), 'imgUrl' => $this->plugin_url.'images/loading.gif', 'addingMsg' => __('Adding to your cart...', 'mp'), 'outMsg' => __('In Your Cart', 'mp') ) );
   }
-
-  function load_tiny_mce($selector) {
-    wp_tiny_mce(false, array("editor_selector" => $selector, 'plugins' => 'inlinepopups,spellchecker,tabfocus,paste,link'));
-	}
-
 
   //loads the jquery lightbox plugin
   function enqueue_lightbox() {
@@ -697,7 +692,7 @@ Thanks again!", 'mp')
     $supports = array( 'title', 'editor', 'author', 'excerpt', 'revisions', 'thumbnail' );
     $args = array (
         'labels' => array('name' => __('Products', 'mp'),
-                      		'singular_name' => __('Products', 'mp'),
+                      		'singular_name' => __('Product', 'mp'),
                       		'add_new' => __('Create New', 'mp'),
                       		'add_new_item' => __('Create New Product', 'mp'),
                       		'edit_item' => __('Edit Products', 'mp'),
@@ -841,7 +836,23 @@ Thanks again!", 'mp')
     if (session_id() == "")
       session_start();
   }
-
+	
+	function logout_clear_session() {
+		$this->start_session();
+		
+		//clear personal info
+		unset($_SESSION['mp_shipping_info']);
+		unset($_SESSION['mp_billing_info']);
+		
+		//remove coupon code
+		if (is_multisite()) {
+			global $blog_id;
+			unset($_SESSION['mp_cart_coupon_' . $blog_id]);
+		} else {
+			unset($_SESSION['mp_cart_coupon']);
+		}
+	}
+	
   //scans post type at template_redirect to apply custom themeing to products
   function load_store_templates() {
     global $wp_query, $mp_wpmu, $mp_gateway_active_plugins;
@@ -939,13 +950,13 @@ Thanks again!", 'mp')
         add_filter( 'template_include', array(&$this, 'custom_checkout_template') );
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
 				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
-				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 99, 3 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
       } else {
         //otherwise load the page template and use our own theme
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
         add_filter( 'the_title', array(&$this, 'page_title_output'), 99 );
 				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
-				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 99, 3 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
         add_filter( 'the_content', array(&$this, 'checkout_theme'), 99 );
       }
 
@@ -968,13 +979,13 @@ Thanks again!", 'mp')
         add_filter( 'template_include', array(&$this, 'custom_orderstatus_template') );
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
 				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
-				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 99, 3 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
       } else {
         //otherwise load the page template and use our own theme
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
         add_filter( 'the_title', array(&$this, 'page_title_output'), 99 );
 				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
-				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 99, 3 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
         add_filter( 'the_content', array(&$this, 'orderstatus_theme'), 99 );
       }
 
@@ -1024,10 +1035,14 @@ Thanks again!", 'mp')
 
         add_filter( 'template_include', array(&$this, 'custom_product_list_template') );
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
       } else {
         //otherwise load the page template and use our own theme
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
         add_filter( 'the_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
         add_filter( 'the_content', array(&$this, 'product_list_theme'), 99 );
         add_filter( 'the_excerpt', array(&$this, 'product_list_theme'), 99 );
       }
@@ -1043,7 +1058,7 @@ Thanks again!", 'mp')
     //load proper theme for product category or tag listings
     if ($wp_query->query_vars['taxonomy'] == 'product_category' || $wp_query->query_vars['taxonomy'] == 'product_tag') {
       $templates = array();
-
+			
       if ($wp_query->query_vars['taxonomy'] == 'product_category') {
 
         $cat_name = get_query_var('product_category');
@@ -1069,13 +1084,20 @@ Thanks again!", 'mp')
       //defaults
       $templates[] = "mp_taxonomy.php";
       $templates[] = "mp_productlist.php";
-
+			
+			//override if id is passed, mainly for product category dropdown widget
+			if ( is_numeric( get_query_var($wp_query->query_vars['taxonomy']) ) ) {
+				$term = get_term( get_query_var($wp_query->query_vars['taxonomy']), $wp_query->query_vars['taxonomy'] );
+				$wp_query->query_vars[$wp_query->query_vars['taxonomy']] = $term->slug;
+				$wp_query->query_vars['term'] = $term->slug;
+			}
+			
       //if custom template exists load it
       if ($this->product_taxonomy_template = locate_template($templates)) {
 
         //call a custom query posts for this listing
         $taxonomy_query = '&' . $wp_query->query_vars['taxonomy'] . '=' . get_query_var($wp_query->query_vars['taxonomy']);
-
+				
         //setup pagination
         if ($settings['paginate']) {
           //figure out perpage
@@ -1104,12 +1126,17 @@ Thanks again!", 'mp')
 
         add_filter( 'template_include', array(&$this, 'custom_product_taxonomy_template'));
         add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
       } else {
         //otherwise load the page template and use our own list theme. We don't use theme's taxonomy as not enough control
         $wp_query->is_page = 1;
         //$wp_query->is_singular = 1;
         $wp_query->is_404 = null;
         $wp_query->post_count = 1;
+				add_filter( 'single_post_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'bp_page_title', array(&$this, 'page_title_output'), 99 );
+				add_filter( 'wp_title', array(&$this, 'wp_title_output'), 19, 3 );
         add_filter( 'the_title', array(&$this, 'page_title_output'), 99, 2 );
         add_filter( 'the_content', array(&$this, 'product_taxonomy_list_theme'), 99 );
         add_filter( 'the_excerpt', array(&$this, 'product_taxonomy_list_theme'), 99 );
@@ -1174,7 +1201,7 @@ Thanks again!", 'mp')
       foreach ($theme_list as $value => $name) {
         if ($network_settings['allowed_themes'][$value] == 'full')
           $allowed_list[$value] = $name;
-        else if (function_exists('is_supporter') && is_supporter() && $network_settings['allowed_themes'][$value] == 'supporter')
+        else if (function_exists('is_pro_site') && is_pro_site() && $network_settings['allowed_themes'][$value] == 'supporter')
           $allowed_list[$value] = $name;
         else if (is_super_admin()) //super admins can access all installed themes
           $allowed_list[$value] = $name;
@@ -1348,7 +1375,7 @@ Thanks again!", 'mp')
     switch ($wp_query->query_vars['pagename']) {
       case 'cart':
         if ($wp_query->query_vars['checkoutstep'] == 'shipping')
-          return __('Shipping Information', 'mp');
+          return $this->download_only_cart($this->get_cart_contents()) ? __('Checkout Information', 'mp') : __('Shipping Information', 'mp');
         else if ($wp_query->query_vars['checkoutstep'] == 'checkout')
           return __('Payment Information', 'mp');
         else if ($wp_query->query_vars['checkoutstep'] == 'confirm-checkout')
@@ -1720,17 +1747,17 @@ Thanks again!", 'mp')
 
 		}
 	}
-
+	
 	//filters label in new product title field
 	function filter_title($post) {
 		global $post_type;
-
+		
 		if ($post_type != 'product')
 			return $post;
-
+		
 		return __( 'Enter Product title here', 'mp' );
 	}
-
+	
   //adds our custom meta boxes the the product edit screen
   function meta_boxes() {
 		global $wp_meta_boxes;
@@ -1748,7 +1775,7 @@ Thanks again!", 'mp')
 			//for product downloads
       add_meta_box('mp-meta-download', __('Product Download', 'mp'), array(&$this, 'meta_download'), 'product', 'normal', 'high');
     }
-
+		
 		//all this junk is to reorder the metabox array to move the featured image box to the top right below submit box. User order will override
 		if ( isset( $wp_meta_boxes['product']['side']['low']['postimagediv'] ) ) {
 			$imagediv = $wp_meta_boxes['product']['side']['low']['postimagediv'];
@@ -1892,7 +1919,7 @@ Thanks again!", 'mp')
 
     <div id="mp_product_link_div">
       <label title="<?php _e('Some examples are linking to a song/album in iTunes, or linking to a product on another site with your own affiliate link.', 'mp'); ?>"><?php _e('External Link', 'mp'); ?>:<br /><small><?php _e('When set this overrides the purchase button with a link to this URL.', 'mp'); ?></small><br />
-      <input type="text" size="100" id="mp_product_link" name="mp_product_link" value="<?php echo esc_url($meta["mp_product_link"]); ?>" /></label>
+      <input type="text" style="width: 100%;" id="mp_product_link" name="mp_product_link" value="<?php echo esc_url($meta["mp_product_link"]); ?>" /></label>
     </div>
 
     <?php do_action( 'mp_details_metabox' ); ?>
@@ -1972,7 +1999,7 @@ Thanks again!", 'mp')
     $totals = array();
     foreach ($cart as $product_id => $variations) {
 			foreach ($variations as $variation => $data) {
-			    $totals[] = $data['price'] * $data['quantity'];
+			    $totals[] = $this->before_tax_price($data['price']) * $data['quantity'];
 			}
     }
 
@@ -2028,12 +2055,20 @@ Thanks again!", 'mp')
 
     $state = isset($_SESSION['mp_shipping_info']['state']) ? $_SESSION['mp_shipping_info']['state'] : $meta['state'];
     $country = isset($_SESSION['mp_shipping_info']['country']) ? $_SESSION['mp_shipping_info']['country'] : $meta['country'];
-
+		
+		//if we've skipped the shipping page and no address is set, use base for tax calculation
+		if ($this->download_only_cart($cart) || $settings['tax']['tax_inclusive']) {
+			if (empty($country))
+				$country = $settings['base_country'];
+			if (empty($state))
+				$state = $settings['base_province'];
+		}
+		
     //get total after any coupons
     $totals = array();
     foreach ($cart as $product_id => $variations) {
 			foreach ($variations as $variation => $data) {
-			  $totals[] = $data['price'] * $data['quantity'];
+			  $totals[] = $this->before_tax_price($data['price']) * $data['quantity'];
 			}
     }
 
@@ -2060,9 +2095,13 @@ Thanks again!", 'mp')
 			  break;
 
 			case 'CA':
-			  //Canada tax is for all orders in country. We're assuming the rate is a combination of GST/PST/etc.
-			  if ($country == 'CA')
-			    $price = round($total * $settings['tax']['rate'], 2);
+			  //Canada tax is for all orders in country, based on province shipped to. We're assuming the rate is a combination of GST/PST/etc.
+				if ( $country == 'CA' && array_key_exists($state, $this->canadian_provinces) ) {
+					if (isset($settings['tax']['canada_rate'][$state]))
+						$price = round($total * $settings['tax']['canada_rate'][$state], 2);
+					else //backwards compat with pre 2.2 if per province rates are not set
+						$price = round($total * $settings['tax']['rate'], 2);
+				}
 			  break;
 
 			case 'AU':
@@ -2078,7 +2117,7 @@ Thanks again!", 'mp')
 			      $price = round($total * $settings['tax']['rate'], 2);
 			  } else {
 			    //all other countries use the tax outside preference
-			    if ($settings['tax']['tax_outside'] || (!$settings['tax']['tax_outside'] && $country = $settings['base_country']))
+			    if ($settings['tax']['tax_outside'] || (!$settings['tax']['tax_outside'] && $country == $settings['base_country']))
 			      $price = round($total * $settings['tax']['rate'], 2);
 			  }
 			  break;
@@ -2086,13 +2125,27 @@ Thanks again!", 'mp')
     if (empty($price))
 			$price = 0;
 
-    $price = apply_filters( 'mp_tax_price', $price, $total, $cart );
+    $price = apply_filters( 'mp_tax_price', $price, $total, $cart, $country, $state );
 
     if ($format)
       return $this->format_currency('', $price);
     else
       return $price;
   }
+	
+	//returns the before tax price for a given amount based on a bunch of foreign tax laws.
+  function before_tax_price($tax_price) {
+		$settings = get_option('mp_settings');
+		
+		//if tax inclusve pricing is turned off just return given price
+		if (!$settings['tax']['tax_inclusive'])
+			return $tax_price;
+		
+		//figure out rate in case its based on a canadian base province
+		$rate =  ('CA' == $settings['base_country']) ? $settings['tax']['canada_rate'][$settings['base_province']] : $settings['tax']['rate'];
+			
+		return round($tax_price / ($rate + 1), 2);
+	}
 
   //returns contents of shopping cart cookie
   function get_cart_cookie($global = false) {
@@ -2247,7 +2300,7 @@ Thanks again!", 'mp')
   }
 
   //receives a post and updates cookie variables for cart
-  function update_cart($no_ajax = true) {
+  function update_cart() {
 		global $blog_id, $mp_gateway_active_plugins;
 		$blog_id = (is_multisite()) ? $blog_id : 1;
 		$current_blog_id = $blog_id;
@@ -2263,7 +2316,7 @@ Thanks again!", 'mp')
 			else
 			  $this->set_cart_cookie(array());
 
-      if ($no_ajax !== true) {
+      if (defined('DOING_AJAX') && DOING_AJAX) {
         ?>
     	<div class="mp_cart_empty">
     	  <?php _e('There are no items in your cart.', 'mp') ?>
@@ -2284,14 +2337,14 @@ Thanks again!", 'mp')
         return false;
 
 			//get quantity
-      $quantity = (isset($_POST['quantity'])) ? intval($_POST['quantity']) : 1;
+      $quantity = (isset($_POST['quantity'])) ? intval(abs($_POST['quantity'])) : 1;
 
       //get variation
-      $variation = (isset($_POST['variation'])) ? intval($_POST['variation']) : 0;
+      $variation = (isset($_POST['variation'])) ? intval(abs($_POST['variation'])) : 0;
 
       //check max stores
       if ($this->global_cart && count($global_cart = $this->get_cart_cookie(true)) >= $mp_gateway_active_plugins[0]->max_stores && !isset($global_cart[$blog_id])) {
-        if ($no_ajax !== true) {
+        if (defined('DOING_AJAX') && DOING_AJAX) {
 	  			echo 'error||' . sprintf(__("Sorry, currently it's not possible to checkout with items from more than %s stores.", 'mp'), $mp_gateway_active_plugins[0]->max_stores);
           exit;
         } else {
@@ -2309,7 +2362,7 @@ Thanks again!", 'mp')
         if (!is_array($stock))
 					$stock[0] = $stock;
         if ($stock[$variation] < $new_quantity) {
-          if ($no_ajax !== true) {
+          if (defined('DOING_AJAX') && DOING_AJAX) {
             echo 'error||' . sprintf(__("Sorry, we don't have enough of this item in stock. (%s remaining)", 'mp'), number_format_i18n($stock[$variation]-$cart[$product_id][$variation]));
             exit;
           } else {
@@ -2318,12 +2371,12 @@ Thanks again!", 'mp')
           }
         }
         //send ajax leftover stock
-        if ($no_ajax !== true) {
-          $return = $stock[$variation]-$new_quantity . '||';
+        if (defined('DOING_AJAX') && DOING_AJAX) {
+          $return = array_sum($stock)-$new_quantity . '||';
         }
       } else {
         //send ajax always stock if stock checking turned off
-        if ($no_ajax !== true) {
+        if (defined('DOING_AJAX') && DOING_AJAX) {
           $return = 1 . '||';
         }
       }
@@ -2332,7 +2385,7 @@ Thanks again!", 'mp')
     	if (get_post_meta($product_id, 'mp_track_limit', true) || $file = get_post_meta($product_id, 'mp_file', true)) {
 				$limit = empty($file) ? maybe_unserialize(get_post_meta($product_id, 'mp_limit', true)) : array($variation => 1);
 	      if ($limit[$variation] && $limit[$variation] < $new_quantity) {
-	        if ($no_ajax !== true) {
+	        if (defined('DOING_AJAX') && DOING_AJAX) {
 		  			echo 'error||' . sprintf(__('Sorry, there is a per order limit of %1$s for "%2$s".', 'mp'), number_format_i18n($limit[$variation]), $product->post_title);
 	          exit;
 	        } else {
@@ -2348,7 +2401,7 @@ Thanks again!", 'mp')
       $this->set_cart_cookie($cart);
 
       //if running via ajax return updated cart and die
-      if ($no_ajax !== true) {
+      if (defined('DOING_AJAX') && DOING_AJAX) {
         $return .= mp_show_cart('widget', false, false);
         echo $return;
 				exit;
@@ -2360,17 +2413,19 @@ Thanks again!", 'mp')
       if (is_array($_POST['quant'])) {
         foreach ($_POST['quant'] as $pbid => $quant) {
 				  list($bid, $product_id, $variation) = split(':', $pbid);
-
+					
 					if (is_multisite())
 				    switch_to_blog($bid);
-
-          if (intval($quant)) {
+					
+					$quant = intval(abs($quant));
+					
+          if ($quant) {
             //check stock
             if (get_post_meta($product_id, 'mp_track_inventory', true)) {
               $stock = maybe_unserialize(get_post_meta($product_id, 'mp_inventory', true));
               if (!is_array($stock))
 								$stock[0] = $stock;
-              if ($stock[$variation] < intval($quant)) {
+              if ($stock[$variation] < $quant) {
                 $left = (($stock[$variation]-intval($global_cart[$bid][$product_id][$variation])) < 0) ? 0 : ($stock[$variation]-intval($global_cart[$bid][$product_id][$variation]));
                 $this->cart_checkout_error( sprintf(__('Sorry, there is not enough stock for "%s". (%s remaining)', 'mp'), get_the_title($product_id), number_format_i18n($left)) );
                 continue;
@@ -2379,37 +2434,35 @@ Thanks again!", 'mp')
           	//check limit if tracking on or downloadable
     				if (get_post_meta($product_id, 'mp_track_limit', true) || $file = get_post_meta($product_id, 'mp_file', true)) {
 							$limit = empty($file) ? maybe_unserialize(get_post_meta($product_id, 'mp_limit', true)) : array($variation => 1);
-							if ($limit[$variation] && $limit[$variation] < intval($quant)) {
+							if ($limit[$variation] && $limit[$variation] < $quant) {
 					      $this->cart_checkout_error( sprintf(__('Sorry, there is a per order limit of %1$s for "%2$s".', 'mp'), number_format_i18n($limit[$variation]), get_the_title($product_id)) );
 	          		continue;
 					    }
 	          }
 
-            $global_cart[$blog_id][$product_id][$variation] = intval($quant);
+            $global_cart[$bid][$product_id][$variation] = $quant;
           } else {
-            unset($global_cart[$blog_id][$product_id][$variation]);
+            unset($global_cart[$bid][$product_id][$variation]);
           }
         }
 
 	    	if (is_multisite())
     			switch_to_blog($current_blog_id);
-
-        //save items to cookie
-        $this->set_global_cart_cookie($global_cart);
       }
 
       //remove items
       if (is_array($_POST['remove'])) {
         foreach ($_POST['remove'] as $pbid) {
 				  list($bid, $product_id, $variation) = split(':', $pbid);
-          unset($global_cart[$blog_id][$product_id][$variation]);
+          unset($global_cart[$bid][$product_id][$variation]);
         }
 
-        //save items to cookie
-        $this->set_global_cart_cookie($global_cart);
         $this->cart_update_message( __('Item(s) Removed', 'mp') );
       }
 
+			//save items to cookie
+			$this->set_global_cart_cookie($global_cart);
+				
       //add coupon code
       if (!empty($_POST['coupon_code'])) {
         if ($this->check_coupon($_POST['coupon_code'])) {
@@ -2442,29 +2495,35 @@ Thanks again!", 'mp')
       //check checkout info
       if (!is_email($_POST['email']))
     		$this->cart_checkout_error( __('Please enter a valid Email Address.', 'mp'), 'email');
-
-      if (empty($_POST['name']))
-    		$this->cart_checkout_error( __('Please enter your Full Name.', 'mp'), 'name');
-
-      if (empty($_POST['address1']))
-    		$this->cart_checkout_error( __('Please enter your Street Address.', 'mp'), 'address1');
-
-      if (empty($_POST['city']))
-    		$this->cart_checkout_error( __('Please enter your City.', 'mp'), 'city');
-
-      if (($_POST['country'] == 'US' || $_POST['country'] == 'CA') && empty($_POST['state']))
-        $this->cart_checkout_error( __('Please enter your State/Province/Region.', 'mp'), 'state');
-
-      if ($_POST['country'] == 'US' && !array_key_exists(strtoupper($_POST['state']), $this->usa_states))
-        $this->cart_checkout_error( __('Please enter a valid two-letter State abbreviation.', 'mp'), 'state');
-			else
-			  $_POST['state'] = strtoupper($_POST['state']);
-
-      if (empty($_POST['zip']))
-    		$this->cart_checkout_error( __('Please enter your Zip/Postal Code.', 'mp'), 'zip');
-
-      if (empty($_POST['country']) || strlen($_POST['country']) != 2)
-    		$this->cart_checkout_error( __('Please enter your Country.', 'mp'), 'country');
+			
+			//only require these fields if not a download only cart
+			if (!$this->download_only_cart($this->get_cart_contents())) {
+				
+				if (empty($_POST['name']))
+					$this->cart_checkout_error( __('Please enter your Full Name.', 'mp'), 'name');
+	
+				if (empty($_POST['address1']))
+					$this->cart_checkout_error( __('Please enter your Street Address.', 'mp'), 'address1');
+	
+				if (empty($_POST['city']))
+					$this->cart_checkout_error( __('Please enter your City.', 'mp'), 'city');
+	
+				if (($_POST['country'] == 'US' || $_POST['country'] == 'CA') && empty($_POST['state']))
+					$this->cart_checkout_error( __('Please enter your State/Province/Region.', 'mp'), 'state');
+	
+				if ($_POST['country'] == 'US' && !array_key_exists(strtoupper($_POST['state']), $this->usa_states))
+					$this->cart_checkout_error( __('Please enter a valid two-letter State abbreviation.', 'mp'), 'state');
+				else if ($_POST['country'] == 'CA' && !array_key_exists(strtoupper($_POST['state']), $this->canadian_provinces))
+					$this->cart_checkout_error( __('Please enter a valid two-letter Canadian Province abbreviation.', 'mp'), 'state');
+				else
+					$_POST['state'] = strtoupper($_POST['state']);
+	
+				if (empty($_POST['zip']))
+					$this->cart_checkout_error( __('Please enter your Zip/Postal Code.', 'mp'), 'zip');
+	
+				if (empty($_POST['country']) || strlen($_POST['country']) != 2)
+					$this->cart_checkout_error( __('Please enter your Country.', 'mp'), 'country');
+			}
 
       //save to session
       global $current_user;
@@ -2478,6 +2537,8 @@ Thanks again!", 'mp')
       $_SESSION['mp_shipping_info']['zip'] = ($_POST['zip']) ? trim(stripslashes($_POST['zip'])) : $meta['zip'];
       $_SESSION['mp_shipping_info']['country'] = ($_POST['country']) ? trim($_POST['country']) : $meta['country'];
       $_SESSION['mp_shipping_info']['phone'] = ($_POST['phone']) ? preg_replace('/[^0-9-\(\) ]/', '', trim($_POST['phone'])) : $meta['phone'];
+			if (isset($_POST['special_instructions']))
+				$_SESSION['mp_shipping_info']['special_instructions'] = trim(stripslashes($_POST['special_instructions']));
 
       //for checkout plugins
       do_action( 'mp_shipping_process' );
@@ -2537,6 +2598,7 @@ Thanks again!", 'mp')
 		      $total = $total + $tax_price;
 
         if ($total > 0) {
+					$network_settings = get_site_option( 'mp_network_settings' );
           //can we skip the payment form page?
 					if ( $this->global_cart ) {
         		$skip = apply_filters('mp_payment_form_skip_' . $network_settings['global_gateway'], false);
@@ -2639,7 +2701,7 @@ Thanks again!", 'mp')
 
   function cart_checkout_error($msg, $context = 'checkout') {
     $msg = str_replace('"', '\"', $msg); //prevent double quotes from causing errors.
-    $content = 'echo "<div class=\"mp_checkout_error\">' . $msg . '</div>";';
+    $content = 'return "<div class=\"mp_checkout_error\">' . $msg . '</div>";';
     add_action( 'mp_checkout_error_' . $context, create_function('', $content) );
     $this->checkout_error = true;
   }
@@ -2758,14 +2820,23 @@ Thanks again!", 'mp')
     $order = array();
     $order['post_title'] = $order_id;
     $order['post_name'] = $order_id;
-    $order['post_content'] = serialize($cart); //this is purely so you can search by cart contents
+    $order['post_content'] = serialize($cart).serialize($shipping_info); //this is purely so you can search by cart contents
     $order['post_status'] = ($paid) ? 'order_paid' : 'order_received';
     $order['post_type'] = 'mp_order';
     $post_id = wp_insert_post($order);
 
     /* add post meta */
+		
+		//filter tax included products in cart
+		$filtered_cart = $cart;
+    foreach ($cart as $product_id => $variations) {
+			foreach ($variations as $variation => $data) {
+	      $filtered_cart[$product_id][$variation]['price'] = $this->before_tax_price($data['price']);
+			}
+		}
+		
     //cart info
-    add_post_meta($post_id, 'mp_cart_info', $cart, true);
+    add_post_meta($post_id, 'mp_cart_info', $filtered_cart, true);
     //shipping info
     add_post_meta($post_id, 'mp_shipping_info', $shipping_info, true);
     //payment info
@@ -2880,8 +2951,10 @@ Thanks again!", 'mp')
     do_action( 'mp_new_order', $this->get_order($order_id) );
 
 		//if paid and the cart is only digital products mark it shipped
-		if ($paid && $this->download_only_cart($cart))
+		if ($paid && $this->download_only_cart($cart)) {
+			$this->skip_shipping_notice = true;
 		  $this->update_order_status($order_id, 'shipped');
+		}
 
     return $order_id;
   }
@@ -2941,7 +3014,7 @@ Thanks again!", 'mp')
         update_post_meta($order->ID, 'mp_shipped_time', time());
 
         //send email
-        $this->order_shipped_notification($order->ID);
+				$this->order_shipped_notification($order->ID);
         break;
 
       case 'closed':
@@ -3054,6 +3127,7 @@ Thanks again!", 'mp')
 
 				if ( is_wp_error($tmp) ) {
 					@unlink($tmp);
+					trigger_error("MarketPress was unable to download the file $url for serving as download: ".$tmp->get_error_message(), E_USER_WARNING);
 					return false;
 				}
 	    }
@@ -3074,6 +3148,7 @@ Thanks again!", 'mp')
 				$cnt = 0;
 				$handle = fopen( $tmp, 'rb' );
 				if ( $handle === false ) {
+					trigger_error("MarketPress was unable to read the file $tmp for serving as download.", E_USER_WARNING);
 					return false;
 				}
 				while ( !feof( $handle ) ) {
@@ -3404,7 +3479,7 @@ Thanks again!", 'mp')
         do_action( 'mp_order_paid', $order );
 
         //if paid and the cart is only digital products mark it shipped
-				if ($this->download_only_cart($cart))
+				if (is_array($order->mp_cart_info) && $this->download_only_cart($order->mp_cart_info))
 				  $this->update_order_status($order->ID, 'shipped');
       } else {
         //update payment time if somehow it was skipped
@@ -3468,18 +3543,30 @@ Thanks again!", 'mp')
     $order_info .= "\n" . __('Order Total:', 'mp') . ' ' . number_format_i18n($order->mp_order_total, 2) . ' ' . $order->mp_payment_info['currency'];
 
     //// Shipping Info
-    $shipping_info = __('Full Name:', 'mp') . ' ' . $order->mp_shipping_info['name'];
-    $shipping_info .= "\n" . __('Address:', 'mp') . ' ' . $order->mp_shipping_info['address1'];
-    if ($order->mp_shipping_info['address2'])
-      $shipping_info .= "\n" . __('Address 2:', 'mp') . ' ' . $order->mp_shipping_info['address2'];
-    $shipping_info .= "\n" . __('City:', 'mp') . ' ' . $order->mp_shipping_info['city'];
-    if ($order->mp_shipping_info['state'])
-      $shipping_info .= "\n" . __('State/Province/Region:', 'mp') . ' ' . $order->mp_shipping_info['state'];
-    $shipping_info .= "\n" . __('Postal/Zip Code:', 'mp') . ' ' . $order->mp_shipping_info['zip'];
-    $shipping_info .= "\n" . __('Country:', 'mp') . ' ' . $order->mp_shipping_info['country'];
-    if ($order->mp_shipping_info['phone'])
-      $shipping_info .= "\n" . __('Phone Number:', 'mp') . ' ' . $order->mp_shipping_info['phone'];
-
+		
+		if (is_array($order->mp_cart_info) && $this->download_only_cart($order->mp_cart_info)) { //if the cart is only digital products
+			$shipping_info = __('No shipping required for this order.', 'mp');
+		} else {
+			$shipping_info = __('Full Name:', 'mp') . ' ' . $order->mp_shipping_info['name'];
+			$shipping_info .= "\n" . __('Address:', 'mp') . ' ' . $order->mp_shipping_info['address1'];
+			if ($order->mp_shipping_info['address2'])
+				$shipping_info .= "\n" . __('Address 2:', 'mp') . ' ' . $order->mp_shipping_info['address2'];
+			$shipping_info .= "\n" . __('City:', 'mp') . ' ' . $order->mp_shipping_info['city'];
+			if ($order->mp_shipping_info['state'])
+				$shipping_info .= "\n" . __('State/Province/Region:', 'mp') . ' ' . $order->mp_shipping_info['state'];
+			$shipping_info .= "\n" . __('Postal/Zip Code:', 'mp') . ' ' . $order->mp_shipping_info['zip'];
+			$shipping_info .= "\n" . __('Country:', 'mp') . ' ' . $order->mp_shipping_info['country'];
+			if ($order->mp_shipping_info['phone'])
+				$shipping_info .= "\n" . __('Phone Number:', 'mp') . ' ' . $order->mp_shipping_info['phone'];
+			if (isset($order->mp_shipping_info['method']) && $order->mp_shipping_info['method'] != 'other')
+				$shipping_info .= "\n" . __('Shipping Method:', 'mp') . ' ' . $order->mp_shipping_info['method'];
+			if ($order->mp_shipping_info['tracking_num'])
+				$shipping_info .= "\n" . __('Tracking Number:', 'mp') . ' ' . $order->mp_shipping_info['tracking_num'];
+		}
+	
+		if ($order->mp_order_notes)
+      $order_notes = __('Order Notes:', 'mp') . "\n" . $order->mp_order_notes;
+		
     //// Payment Info
     $payment_info = __('Payment Method:', 'mp') . ' ' . $order->mp_payment_info['gateway_public_name'];
 
@@ -3509,8 +3596,8 @@ Thanks again!", 'mp')
     $tracking_url = mp_orderstatus_link(false, true) . $order->post_title . '/';
 
     //setup filters
-    $search = array('CUSTOMERNAME', 'ORDERID', 'ORDERINFO', 'SHIPPINGINFO', 'PAYMENTINFO', 'TOTAL', 'TRACKINGURL');
-    $replace = array($order->mp_shipping_info['name'], $order->post_title, $order_info, $shipping_info, $payment_info, $order_total, $tracking_url);
+    $search = array('CUSTOMERNAME', 'ORDERID', 'ORDERINFO', 'SHIPPINGINFO', 'PAYMENTINFO', 'TOTAL', 'TRACKINGURL', 'ORDERNOTES');
+    $replace = array($order->mp_shipping_info['name'], $order->post_title, $order_info, $shipping_info, $payment_info, $order_total, $tracking_url, $order_notes);
 
     //replace
     $text = str_replace($search, $replace, $text);
@@ -3527,8 +3614,8 @@ Thanks again!", 'mp')
     if (!$order)
       return false;
 
-    $subject = $this->filter_email($order, $settings['email']['new_order_subject']);
-    $msg = $this->filter_email($order, $settings['email']['new_order_txt']);
+    $subject = $this->filter_email($order, stripslashes($settings['email']['new_order_subject']));
+    $msg = $this->filter_email($order, stripslashes($settings['email']['new_order_txt']));
     $msg = apply_filters( 'mp_order_notification_' . $_SESSION['mp_payment_method'], $msg, $order );
 
     $this->mail($order->mp_shipping_info['email'], $subject, $msg);
@@ -3565,15 +3652,15 @@ You can manage this order here: %s", 'mp');
     $order = $this->get_order($order_id);
     if (!$order)
       return false;
-
-    //if the cart is only digital products skip notification
-		if ($this->download_only_cart($order->mp_cart_info))
-    	return false;
-
-    $settings['email']['shipped_order_subject'] = apply_filters('mp_shipped_order_notification_subject', $settings['email']['shipped_order_subject'], $order);
-    $subject = $this->filter_email($order, $settings['email']['shipped_order_subject']);
-    $settings['email']['shipped_order_txt'] = apply_filters( 'mp_shipped_order_notification_body', $settings['email']['shipped_order_txt'], $order );
-    $msg = $this->filter_email($order, $settings['email']['shipped_order_txt']);
+		
+		//skip notice for paid download only carts
+		if ($this->skip_shipping_notice)
+			return false;
+		
+    $subject = apply_filters('mp_shipped_order_notification_subject', stripslashes($settings['email']['shipped_order_subject']), $order);
+    $subject = $this->filter_email($order, $subject);
+    $msg = apply_filters( 'mp_shipped_order_notification_body', stripslashes($settings['email']['shipped_order_txt']), $order );
+    $msg = $this->filter_email($order, $msg);
     $msg = apply_filters( 'mp_shipped_order_notification', $msg, $order );
 
     $this->mail($order->mp_shipping_info['email'], $subject, $msg);
@@ -3714,12 +3801,31 @@ Notification Preferences: %s', 'mp');
 
     $settings = get_option('mp_settings');
 		$max_downloads = intval($settings['max_downloads']) ? intval($settings['max_downloads']) : 5;
+		
+		//save tracking number
+		if (isset($_POST['mp_tracking_number'])) {
+			$order->mp_shipping_info['tracking_num'] = stripslashes(trim($_POST['mp_tracking_number']));
+			$order->mp_shipping_info['method'] = stripslashes(trim($_POST['mp_shipping_method']));
+			update_post_meta($order->ID, 'mp_shipping_info', $order->mp_shipping_info);
+
+			if (isset($_POST['add-tracking-shipped'])) {
+				$this->update_order_status($order->ID, 'shipped');
+				$order->post_status = 'order_shipped';
+				?><div class="updated fade"><p><?php _e('This order has been marked as Shipped.', 'mp'); ?></p></div><?php
+			}
+
+			if (!current_user_can('unfiltered_html'))
+				$_POST['mp_order_notes'] = wp_filter_post_kses(trim(stripslashes($_POST['mp_order_notes'])));
+				
+			$order->mp_order_notes = stripslashes($_POST['mp_order_notes']);
+			update_post_meta($order->ID, 'mp_order_notes', $_POST['mp_order_notes']);
+			?><div class="updated fade"><p><?php _e('Order details have been saved!', 'mp'); ?></p></div><?php
+		}
     ?>
     <div class="wrap">
     <div class="icon32"><img src="<?php echo $this->plugin_url . 'images/shopping-cart.png'; ?>" /></div>
     <h2><?php echo sprintf(__('Order Details (%s)', 'mp'), esc_attr($order->post_title)); ?></h2>
 
-    <form id="mp-single-order-form" action="<?php echo admin_url('edit.php'); ?>" method="get">
     <div id="poststuff" class="metabox-holder mp-settings has-right-sidebar">
 
     <div id="side-info-column" class="inner-sidebar">
@@ -3766,12 +3872,13 @@ Notification Preferences: %s', 'mp');
         ?>
 
           <div id="major-publishing-actions">
-
+						<form id="mp-single-order-form" action="<?php echo admin_url('edit.php'); ?>" method="get">
             <div id="mp-single-order-buttons">
               <input type="hidden" name="post_type" class="post_status_page" value="product" />
               <input type="hidden" name="page" class="post_status_page" value="marketpress-orders" />
               <input name="save" class="button-primary" id="publish" tabindex="1" value="<?php _e('&laquo; Back', 'mp'); ?>" type="submit" />
             </div>
+						</form>
             <div class="clear"></div>
           </div>
         </div>
@@ -3853,7 +3960,7 @@ Notification Preferences: %s', 'mp');
           }
           ?>
             <strong><?php echo date(get_option('date_format') . ' - ' . get_option('time_format'), $timestamp); ?>:</strong>
-            <?php echo htmlentities($status); ?>
+            <?php echo esc_html($status); ?>
           </div>
         <?php } ?>
 
@@ -3942,10 +4049,17 @@ Notification Preferences: %s', 'mp');
 
         <h3><?php _e('Cart Total:', 'mp'); ?></h3>
         <p><?php echo $this->format_currency('', $order->mp_order_total); ?></p>
-
+				
+				<?php //special instructions line
+        if ( !empty($order->mp_shipping_info['special_instructions']) ) { ?>
+        <h3><?php _e('Special Instructions:', 'mp'); ?></h3>
+        <p><?php echo wpautop(esc_html($order->mp_shipping_info['special_instructions'])); ?></p>
+        <?php } ?>
+				
         </div>
       </div>
-
+			
+			<form id="mp-shipping-form" action="" method="post">
       <div id="mp-order-shipping-info" class="postbox">
         <h3 class='hndle'><span><?php _e('Shipping Information', 'mp'); ?></span></h3>
         <div class="inside">
@@ -3953,41 +4067,41 @@ Notification Preferences: %s', 'mp');
           <table>
             <tr>
           	<td align="right"><?php _e('Full Name:', 'mp'); ?></td><td>
-            <?php echo esc_attr($order->mp_shipping_info['name']); ?></td>
+            <?php esc_attr_e($order->mp_shipping_info['name']); ?></td>
           	</tr>
 
             <tr>
           	<td align="right"><?php _e('Email:', 'mp'); ?></td><td>
-            <?php echo esc_attr($order->mp_shipping_info['email']); ?></td>
+            <?php esc_attr_e($order->mp_shipping_info['email']); ?></td>
           	</tr>
 
           	<tr>
           	<td align="right"><?php _e('Address:', 'mp'); ?></td>
-            <td><?php echo esc_attr($order->mp_shipping_info['address1']); ?></td>
+            <td><?php esc_attr_e($order->mp_shipping_info['address1']); ?></td>
           	</tr>
 
             <?php if ($order->mp_shipping_info['address2']) { ?>
           	<tr>
           	<td align="right"><?php _e('Address 2:', 'mp'); ?></td>
-            <td><?php echo esc_attr($order->mp_shipping_info['address2']); ?></td>
+            <td><?php esc_attr_e($order->mp_shipping_info['address2']); ?></td>
           	</tr>
             <?php } ?>
 
           	<tr>
           	<td align="right"><?php _e('City:', 'mp'); ?></td>
-            <td><?php echo esc_attr($order->mp_shipping_info['city']); ?></td>
+            <td><?php esc_attr_e($order->mp_shipping_info['city']); ?></td>
           	</tr>
 
           	<?php if ($order->mp_shipping_info['state']) { ?>
           	<tr>
           	<td align="right"><?php _e('State/Province/Region:', 'mp'); ?></td>
-            <td><?php echo esc_attr($order->mp_shipping_info['state']); ?></td>
+            <td><?php esc_attr_e($order->mp_shipping_info['state']); ?></td>
           	</tr>
             <?php } ?>
 
           	<tr>
           	<td align="right"><?php _e('Postal/Zip Code:', 'mp'); ?></td>
-            <td><?php echo esc_attr($order->mp_shipping_info['zip']); ?></td>
+            <td><?php esc_attr_e($order->mp_shipping_info['zip']); ?></td>
           	</tr>
 
           	<tr>
@@ -3998,29 +4112,54 @@ Notification Preferences: %s', 'mp');
             <?php if ($order->mp_shipping_info['phone']) { ?>
           	<tr>
           	<td align="right"><?php _e('Phone Number:', 'mp'); ?></td>
-            <td><?php echo esc_attr($order->mp_shipping_info['phone']); ?></td>
+            <td><?php esc_attr_e($order->mp_shipping_info['phone']); ?></td>
           	</tr>
             <?php } ?>
           </table>
 
           <h3><?php _e('Cost:', 'mp'); ?></h3>
           <p><?php echo $this->format_currency('', $order->mp_shipping_total); ?></p>
-
+					
+          <h3><?php _e('Shipping Method & Tracking Number:', 'mp'); ?></h3>
+          <p>
+					<select name="mp_shipping_method">
+						<option value="other"><?php _e('Choose Method:', 'mp'); ?></option>
+						<option value="UPS"<?php selected($order->mp_shipping_info['method'], 'UPS'); ?>>UPS</option>
+						<option value="FedEx"<?php selected($order->mp_shipping_info['method'], 'FedEx'); ?>>FedEx</option>
+						<option value="USPS"<?php selected($order->mp_shipping_info['method'], 'USPS'); ?>>USPS</option>
+						<option value="DHL"<?php selected($order->mp_shipping_info['method'], 'DHL'); ?>>DHL</option>
+						<option value="other"<?php selected($order->mp_shipping_info['method'], 'other'); ?>><?php _e('Other', 'mp'); ?></option>
+					</select>
+					<input type="text" name="mp_tracking_number" value="<?php esc_attr_e($order->mp_shipping_info['tracking_num']); ?>" size="25" />
+					<input type="submit" name="add-tracking" value="<?php _e('Save &raquo;', 'mp'); ?>" /><?php if ($order->post_status == 'order_received' ||$order->post_status == 'order_paid') { ?><input type="submit" name="add-tracking-shipped" value="<?php _e('Save & Mark as Shipped &raquo;', 'mp'); ?>" /><?php } ?>
+					</p>
+					
           <?php //note line if set by gateway
           if ( $order->mp_payment_info['note'] ) { ?>
           <h3><?php _e('Special Note:', 'mp'); ?></h3>
-          <p><?php echo htmlentities($order->mp_payment_info['note']); ?></p>
+          <p><?php esc_html_e($order->mp_payment_info['note']); ?></p>
           <?php } ?>
-
+					
           <?php do_action('mp_single_order_display_shipping', $order); ?>
 
         </div>
       </div>
-
+			
+      <div id="mp-order-notes" class="postbox">
+        <h3 class='hndle'><span><?php _e('Order Notes', 'mp'); ?></span> - <span class="description"><?php _e('These notes will be displayed on the order status page', 'mp'); ?></span></h3>
+        <div class="inside">
+					<p>
+					<textarea name="mp_order_notes" rows="5" style="width: 100%;"><?php echo esc_textarea($order->mp_order_notes); ?></textarea><br />
+					<input type="submit" name="save-note" value="<?php _e('Save &raquo;', 'mp'); ?>" />
+					</p>
+				</div>
+      </div>
+			</form>
+			
       <?php do_action('mp_single_order_display_box', $order); ?>
 
     </div>
-
+		
     <div id='advanced-sortables' class='meta-box-sortables'>
     </div>
 
@@ -4028,7 +4167,7 @@ Notification Preferences: %s', 'mp');
     </div>
     <br class="clear" />
     </div><!-- /poststuff -->
-    </form>
+    
     </div><!-- /wrap -->
     <?php
   }
@@ -4376,8 +4515,15 @@ Notification Preferences: %s', 'mp');
         if (isset($_POST['marketplace_settings'])) {
 
           //allow plugins to verify settings before saving
-          $tax_rate = $_POST['mp']['tax']['rate'] * .01;
-          $_POST['mp']['tax']['rate'] = ($tax_rate < 1 && $tax_rate >= 0) ? $tax_rate : 0;
+					if (isset($_POST['mp']['tax']['canada_rate'])) {
+						foreach	($_POST['mp']['tax']['canada_rate'] as $key => $rate) {
+							$tax_rate = $rate * .01;
+							$_POST['mp']['tax']['canada_rate'][$key] = ($tax_rate < 1 && $tax_rate >= 0) ? $tax_rate : 0;
+						}
+					} else {
+						$tax_rate = $_POST['mp']['tax']['rate'] * .01;
+						$_POST['mp']['tax']['rate'] = ($tax_rate < 1 && $tax_rate >= 0) ? $tax_rate : 0;
+					}
           $settings = array_merge($settings, apply_filters('mp_main_settings_filter', $_POST['mp']));
           update_option('mp_settings', $settings);
 
@@ -4478,10 +4624,18 @@ Notification Preferences: %s', 'mp');
                 case 'CA':
                   ?>
                   <tr>
-          				<th scope="row"><?php echo sprintf(__('%s Total Tax Rate (VAT,GST,PST,HST)', 'mp'), esc_attr($this->canadian_provinces[$settings['base_province']])); ?></th>
+          				<th scope="row"><a href="http://sbinfocanada.about.com/od/pst/a/PSTecommerce.htm" target="_blank"><?php _e('Total Tax Rates (VAT,GST,PST,HST)', 'mp'); ?></a></th>
           				<td>
-                  <input value="<?php echo $settings['tax']['rate'] * 100; ?>" size="3" name="mp[tax][rate]" type="text" style="text-align:right;" />%
-            			</td>
+										<span class="description"><a href="http://en.wikipedia.org/wiki/Sales_taxes_in_Canada" target="_blank"><?php _e('Current Rates &raquo;', 'mp'); ?></a></span>
+										<table cellspacing="0" cellpadding="0">
+										<?php foreach ($this->canadian_provinces as $key => $label) { ?>
+										<tr>
+											<td style="padding: 0 5px;"><label for="mp_tax_<?php echo $key; ?>"><?php echo esc_attr($label); ?></label></td>
+											<td style="padding: 0 5px;"><input value="<?php echo $settings['tax']['canada_rate'][$key] * 100; ?>" size="3" id="mp_tax_<?php echo $key; ?>" name="mp[tax][canada_rate][<?php echo $key; ?>]" type="text" style="text-align:right;" />%</td>
+										</tr>
+										<?php	} ?>
+										</table>
+									</td>
                   </tr>
                   <?php
                   break;
@@ -4547,17 +4701,14 @@ Notification Preferences: %s', 'mp');
                 <br /><span class="description"><?php _e('Please see your local tax laws. Most areas charge tax on shipping fees.', 'mp') ?></span>
           			</td>
                 </tr>
-                <?php /* ?>
                 <tr>
-        				<th scope="row"><?php _e('Show Prices Inclusive of Tax?', 'mp') ?></th>
+        				<th scope="row"><?php _e('Enter Prices Inclusive of Tax?', 'mp') ?></th>
                 <td>
-                <?php $tax_inclusive = isset($settings['tax']['tax_inclusive']) ? $settings['tax']['tax_inclusive'] : 0; ?>
-        				<label><input value="1" name="mp[tax][tax_inclusive]" type="radio"<?php checked($tax_inclusive, 1) ?> /> <?php _e('Yes', 'mp') ?></label>
-                <label><input value="0" name="mp[tax][tax_inclusive]" type="radio"<?php checked($tax_inclusive, 0) ?> /> <?php _e('No', 'mp') ?></label>
-                <br /><span class="description"><?php _e('Please see your local tax laws.', 'mp') ?></span>
+        				<label><input value="1" name="mp[tax][tax_inclusive]" type="radio"<?php checked($settings['tax']['tax_inclusive'], 1) ?> /> <?php _e('Yes', 'mp') ?></label>
+                <label><input value="0" name="mp[tax][tax_inclusive]" type="radio"<?php checked($settings['tax']['tax_inclusive'], 0) ?> /> <?php _e('No', 'mp') ?></label>
+                <br /><span class="description"><?php _e('Enabling this option allows you to enter and show all prices inclusive of tax, while still listing the tax total as a line item in shopping carts. Please see your local tax laws.', 'mp') ?></span>
           			</td>
                 </tr>
-                <?php */ ?>
               </table>
             </div>
           </div>
@@ -4609,7 +4760,21 @@ Notification Preferences: %s', 'mp');
             <h3 class='hndle'><span><?php _e('Miscellaneous Settings', 'mp') ?></span></h3>
             <div class="inside">
               <table class="form-table">
-
+								<tr id="mp-inventory-setting">
+                <th scope="row"><?php _e('Inventory Warning Threshold', 'mp') ?></th>
+        				<td>
+        				<span class="description"><?php _e('At what low stock count do you want to be warned for products you have enabled inventory tracking for?', 'mp') ?></span><br />
+								<select name="mp[inventory_threshhold]">
+								<?php
+								$inventory_threshhold = isset($settings['inventory_threshhold']) ? intval($settings['inventory_threshhold']) : 3;
+								for ($i=0; $i<=100; $i++) {
+                  $selected = ($inventory_threshhold == $i) ? ' selected="selected"' : '';
+			            echo '<option value="' . $i . '"' . $selected . '">' . $i . '</option>';
+			    			}
+								?>
+								</select>
+                </td>
+                </tr>
                 <tr id="mp-downloads-setting">
                 <th scope="row"><?php _e('Maximum Downloads', 'mp') ?></th>
         				<td>
@@ -4652,6 +4817,14 @@ Notification Preferences: %s', 'mp');
 									<option value="old"><?php _e('Old Tracking Code', 'mp') ?></option>
 								</select>
         				<br /><span class="description"><?php _e('If you already use Google Analytics for your website, you can track detailed ecommerce information by enabling this setting. Choose whether you are using the new asynchronous or old tracking code. Before Google Analytics can report ecommerce activity for your website, you must enable ecommerce tracking on the profile settings page for your website. Also keep in mind that some gateways do not reliably show the receipt page, so tracking may not be accurate in those cases. It is recommended to use the PayPal gateway for the most accurate data. <a href="http://analytics.blogspot.com/2009/05/how-to-use-ecommerce-tracking-in-google.html" target="_blank">More information &raquo;</a>', 'mp') ?></span>
+          			</td>
+                </tr>
+                <tr>
+                <th scope="row"><?php _e('Special Instructions Field', 'mp') ?></th>
+        				<td>
+        				<label><input value="1" name="mp[special_instructions]" type="radio"<?php checked($settings['special_instructions'], 1) ?> /> <?php _e('Yes', 'mp') ?></label>
+                <label><input value="0" name="mp[special_instructions]" type="radio"<?php checked($settings['special_instructions'], 0) ?> /> <?php _e('No', 'mp') ?></label>
+                <br /><span class="description"><?php printf(__('Enabling this field will display a textbox on the shipping checkout page for users to enter special instructions for their order. Useful for product personalization, etc. Note you may want to <a href="%s">adjust the message on the shipping page.', 'mp'), admin_url('edit.php?post_type=product&page=marketpress&tab=messages#mp_msgs_shipping')); ?></span>
           			</td>
                 </tr>
               </table>
@@ -5230,10 +5403,6 @@ Notification Preferences: %s', 'mp');
 
         //strip slashes
         $settings['email'] = array_map('stripslashes', $settings['email']);
-
-        //enqueue visual editor
-        if (get_user_option('rich_editing') == 'true')
-        	$this->load_tiny_mce("mp_msgs_txt");
         ?>
         <div class="icon32"><img src="<?php echo $this->plugin_url . 'images/messages.png'; ?>" /></div>
         <h2><?php _e('Messages Settings', 'mp'); ?></h2>
@@ -5257,7 +5426,7 @@ Notification Preferences: %s', 'mp');
                 <tr>
         				<th scope="row"><?php _e('New Order', 'mp'); ?></th>
         				<td>
-        				<span class="description"><?php _e('The email text sent to your customer to confirm a new order. These codes will be replaced with order details: CUSTOMERNAME, ORDERID, ORDERINFO, SHIPPINGINFO, PAYMENTINFO, TOTAL, TRACKINGURL. No HTML allowed.', 'mp') ?></span><br />
+        				<span class="description"><?php _e('The email text sent to your customer to confirm a new order. These codes will be replaced with order details: CUSTOMERNAME, ORDERID, ORDERINFO, SHIPPINGINFO, PAYMENTINFO, TOTAL, TRACKINGURL, ORDERNOTES. No HTML allowed.', 'mp') ?></span><br />
                 <label><?php _e('Subject:', 'mp'); ?><br />
                 <input class="mp_emails_sub" name="mp[email][new_order_subject]" value="<?php echo esc_attr($settings['email']['new_order_subject']); ?>" maxlength="150" /></label><br />
                 <label><?php _e('Text:', 'mp'); ?><br />
@@ -5268,7 +5437,7 @@ Notification Preferences: %s', 'mp');
                 <tr>
         				<th scope="row"><?php _e('Order Shipped', 'mp'); ?></th>
         				<td>
-        				<span class="description"><?php _e('The email text sent to your customer when you mark an order as "Shipped". These codes will be replaced with order details: CUSTOMERNAME, ORDERID, ORDERINFO, SHIPPINGINFO, PAYMENTINFO, TOTAL, TRACKINGURL. No HTML allowed.', 'mp') ?></span><br />
+        				<span class="description"><?php _e('The email text sent to your customer when you mark an order as "Shipped". These codes will be replaced with order details: CUSTOMERNAME, ORDERID, ORDERINFO, SHIPPINGINFO, PAYMENTINFO, TOTAL, TRACKINGURL, ORDERNOTES. No HTML allowed.', 'mp') ?></span><br />
                 <label><?php _e('Subject:', 'mp'); ?><br />
                 <input class="mp_emails_sub" name="mp[email][shipped_order_subject]" value="<?php echo esc_attr($settings['email']['shipped_order_subject']); ?>" maxlength="150" /></label><br />
                 <label><?php _e('Text:', 'mp'); ?><br />
@@ -5298,14 +5467,14 @@ Notification Preferences: %s', 'mp');
         				<th scope="row"><?php _e('Product Listing Pages', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the product listing pages. Optional, HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][product_list]"><?php echo $settings['msg']['product_list']; ?></textarea>
-        				</td>
+        				<?php wp_editor( $settings['msg']['product_list'], 'product_list', array('textarea_name'=>'mp[msg][product_list]') ); ?>
+								</td>
                 </tr>
                 <tr>
         				<th scope="row"><?php _e('Order Status Page', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the Order Status page. Optional, HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][order_status]"><?php echo $settings['msg']['order_status']; ?></textarea>
+								<?php wp_editor( $settings['msg']['order_status'], 'order_status', array('textarea_name'=>'mp[msg][order_status]') ); ?>
         				</td>
                 </tr>
               </table>
@@ -5320,35 +5489,35 @@ Notification Preferences: %s', 'mp');
         				<th scope="row"><?php _e('Shopping Cart Page', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the Shopping Cart page. Optional, HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][cart]"><?php echo $settings['msg']['cart']; ?></textarea>
+								<?php wp_editor( $settings['msg']['cart'], 'cart', array('textarea_name'=>'mp[msg][cart]') ); ?>
         				</td>
                 </tr>
-                <tr>
+                <tr id="mp_msgs_shipping">
         				<th scope="row"><?php _e('Shipping Form Page', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the Shipping Form page. Optional, HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][shipping]"><?php echo $settings['msg']['shipping']; ?></textarea>
+								<?php wp_editor( $settings['msg']['shipping'], 'shipping', array('textarea_name'=>'mp[msg][shipping]') ); ?>
         				</td>
                 </tr>
                 <tr>
         				<th scope="row"><?php _e('Payment Form Page', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the Payment Form page. Optional, HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][checkout]"><?php echo $settings['msg']['checkout']; ?></textarea>
+								<?php wp_editor( $settings['msg']['checkout'], 'checkout', array('textarea_name'=>'mp[msg][checkout]') ); ?>
         				</td>
                 </tr>
                 <tr>
         				<th scope="row"><?php _e('Order Confirmation Page', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the final Order Confirmation page. HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][confirm_checkout]"><?php echo $settings['msg']['confirm_checkout']; ?></textarea>
+								<?php wp_editor( $settings['msg']['confirm_checkout'], 'confirm_checkout', array('textarea_name'=>'mp[msg][confirm_checkout]') ); ?>
         				</td>
                 </tr>
                 <tr>
         				<th scope="row"><?php _e('Order Complete Page', 'mp'); ?></th>
         				<td>
         				<span class="description"><?php _e('Displayed at the top of the page notifying customers of a successful order. HTML allowed.', 'mp') ?></span><br />
-                <textarea class="mp_msgs_txt" name="mp[msg][success]"><?php echo $settings['msg']['success']; ?></textarea>
+								<?php wp_editor( $settings['msg']['success'], 'success', array('textarea_name'=>'mp[msg][success]') ); ?>
         				</td>
                 </tr>
               </table>
@@ -5496,7 +5665,7 @@ Notification Preferences: %s', 'mp');
                   foreach ((array)$mp_gateway_plugins as $code => $plugin) {
                     if ($network_settings['allowed_gateways'][$code] == 'full') {
                       $allowed_plugins[$code] = $plugin;
-                    } else if (function_exists('is_supporter') && is_supporter() && $network_settings['allowed_gateways'][$code] == 'supporter') {
+                    } else if (function_exists('is_pro_site') && is_pro_site() && $network_settings['allowed_gateways'][$code] == 'supporter') {
                       $allowed_plugins[$code] = $plugin;
                     }
                   }
@@ -5647,7 +5816,7 @@ Notification Preferences: %s', 'mp');
         </div>
         <?php
         break;
-
+			
 			//---------------------------------------------------//
   		case "importers":
         ?>
@@ -5655,13 +5824,13 @@ Notification Preferences: %s', 'mp');
 				<form id="mp-import-form" method="post" action="" enctype="multipart/form-data">
 				<h2><?php _e('Import Products', 'mp'); ?></h2>
 				<div id="poststuff" class="metabox-holder mp-importer">
-					<?php do_action('marketpress_add_importer'); ?>
+					<?php do_action('marketpress_add_importer'); ?>	
 				</div>
 				</form>
 			</div>
         <?php
         break;
-
+			
   	} //end switch
 
   	//hook to create a new admin screen.
@@ -5701,7 +5870,7 @@ class MarketPress_Shopping_Cart extends WP_Widget {
     if ( !empty($instance['custom_text']) )
       echo '<div class="custom_text">' . $instance['custom_text'] . '</div>';
 
-    echo '<div class="mp_cart_widget">';
+    echo '<div class="mp_cart_widget_content">';
     mp_show_cart('widget');
     echo '</div>';
 
@@ -5948,21 +6117,6 @@ class MarketPress_Categories_Widget extends WP_Widget {
 			$cat_args['taxonomy'] = 'product_category';
       $cat_args['id'] = 'mp_category_dropdown';
 			wp_dropdown_categories( $cat_args );
-?>
-
-<script type='text/javascript'>
-/* <![CDATA[ */
-	var dropdown = document.getElementById("mp_category_dropdown");
-	function onCatChange() {
-		if ( dropdown.options[dropdown.selectedIndex].value > 0 ) {
-			location.href = "<?php echo home_url(); ?>/?product_category="+dropdown.options[dropdown.selectedIndex].value;
-		}
-	}
-	dropdown.onchange = onCatChange;
-/* ]]> */
-</script>
-
-<?php
 		} else {
 ?>
 <ul id="mp_category_list">

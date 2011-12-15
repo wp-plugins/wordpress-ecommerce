@@ -1,8 +1,8 @@
 === WordPress eCommerce - MarketPress ===
-Contributors: WPMUDEV
+Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
-Requires at least: 3.2
-Tested up to: 3.2.1
+Requires at least: 3.3
+Tested up to: 3.3
 Stable tag: trunk
 
 The best free ecommerce plugin available for WordPress - easy to use, beautiful & powerful.
@@ -13,7 +13,7 @@ MarketPress is the easiest to use, best designed and most powerful ecommerce / s
 
 Developed from the ground up to make it **simple** to set up a stylish online shop, MarketPress has all the features you need, including:
 
-* Multiple payment gateways (PayPal, Authorize.net, Google checkout, 2checkout, Moneybookers and more)
+* Multiple payment gateways (PayPal, Authorize.net, Google checkout, 2checkout, Moneybookers, eWay, Cubepoints and more)
 * Works great with any WordPress theme and looks great with AJAXy goodness
 * Fully internationalized by the WPML crew
 * Sell real objects, or digital downloads (with limits and tracking!), with ease
@@ -29,7 +29,7 @@ We guarantee you'll enjoy it right out of the box... although we provide compreh
 Or, read on to find out more about what you can get from MarketPress...
 
 = Sick of WP-ecommerce? =
-One of the main reasons we developed MarketPress was because, basically, all of the existing WordPress ecommerce plugins out there offer a pretty awful user experience. Especially WP-ecommerce, so we built a complete importer - allowing you to easily import your troublesome WP ecommerce store into MarketPress... hurrah!
+One of the main reasons we developed MarketPress was because, basically, so many of the existing WordPress ecommerce plugins out there offer a pretty awful user experience. WP-ecommerce being the most popular, we built a complete importer - allowing you to easily import your troublesome WP-ecommerce store into MarketPress... hurrah!
 
 = Want to make your product listings look amazing? =
 MarketPress is 100% customizable, but in case you don't want to get stuck into all that CSS, it comes with:
@@ -126,6 +126,56 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Grid Layout
 
 == Changelog ==
+
+
+= 2.4.1 =
+* WP 3.3 Compatibility - Not backwards compatible
+* Fix negative quantities being able to be added to your cart: http://premium.wpmudev.org/forums/topic/marketpress-security-bug
+* Fix removing cart items when global is set to on
+* Gracefully handle global carts if a seller hasn't configured PayPal by skipping their checkout
+* Handle SSL properly on checkout page
+* Fix out of stock AJAX message for variation products: http://premium.wpmudev.org/forums/topic/out-of-stock-triggers-when-only-one-of-the-variations-is-sold-out-but-others-are-still-available
+* Hook into logout to clear personal session information: http://premium.wpmudev.org/forums/topic/security-issue-with-marketpress
+* Add textdomain to plugin header to translate plugin description
+* Change link field to work with low resolution
+* Fix bug with icons css theme
+* Update the table rate shipping for international support
+* Update chained payments documentation
+* Add Turkish lira to PayPal gateways
+* Make shipping info available to search for on orders page. http://premium.wpmudev.org/forums/topic/search-store-orders-by-name-bug
+* Add JS to dropdown categories shortcode
+* Fix missing title on product list pages
+* Fix title incompatibility with Genesis & Catalyst framework based themes
+* Style fixes to icons CSS theme
+* Fix double email for digital only orders
+* Still send shipped notification email for download only carts (for gateways with delayed paid confirmations)
+* Fix cart widget title getting removed on AJAX add to cart for some themes
+* Combine forms on the edit order screen to avoid confusion when saving
+* Add back in Inventory Threshold option
+* Add action hook to mp_order_status() template function.
+* Add points and credits currency types
+* Add Table Rate shipping plugin
+* Fix tax inclusive display in cart widget
+* Fix blank gateway select page for download only carts combined with PayPal Express gateway
+* Add back email field for download only carts
+* Fix graceful degrading of AJAX cart handling
+* Adjust PayPal gateway to gracefully handle carts with free products in them
+* Fixed small bug in canada tax handling
+* Added ajax shipping province dropdown for USA, CAN, AUS
+* Fixed small checkout error display bug
+* Fixed slashes issue in emails
+* Fixed default tax display with tax inclusive pricing on
+* Added Cubepoints gateway - Requires the CubePoints plugin: http://wordpress.org/extend/plugins/cubepoints/
+* Added eWay Shared Payments gateway
+* Add Tax inclusive pricing option
+* Add tracking number field to shipping section of Order management
+* Add notes field to order management page
+* Add special instructions field option for orders that require personalization
+* Skip shipping checkout page for digital only orders
+* Fix dropdown product category widget
+* Fix bug in tax calculation for some countries
+* Fix bug in order payment status change to paid
+* Fix small bug in global products paging last page
 
 = 2.1.6 =
 * Fix sprintf() bug on paypal-express gateway

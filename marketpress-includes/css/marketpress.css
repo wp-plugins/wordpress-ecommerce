@@ -152,6 +152,7 @@ div#mp-target-countries {
 ul.mp-shortcode-options {
   list-style: disc outside none;
   margin-left: 25px;
+<<<<<<< .working
 }
 
 .mp_var_col {
@@ -241,4 +242,95 @@ div.mp-pro-update {
 	float: left;
 	margin-right: 10px;
 	margin-bottom: 1px;
+=======
+}
+
+.mp_var_col {
+	display: none;
+}
+.mp_var_col input, .mp_sku_col input {
+	width: 100%;
+}
+.mp_sku_col {
+	width: 120px;
+}
+td.mp_price_col {
+	width: 75px;
+}
+td.mp_sale_col {
+	width: 100px;
+}
+td.mp_price_col input, td.mp_sale_col input {
+	width: 65px;
+}
+td.mp_inv_col {
+	width: 100px;
+}
+td.mp_inv_col input {
+	width: 30px;
+	text-align: center;
+}
+
+#mp_add_vars {
+	text-align: right;
+	font-size: 14px;
+	margin-top: 5px;
+}
+#mp_add_vars a {
+  background: transparent url('../images/plus.gif') no-repeat scroll left center;
+  padding-left: 20px;
+}
+.mp_var_remove a {
+	text-indent: -9999px;
+	overflow: hidden;
+	background: transparent url('../images/remove.png') no-repeat scroll center center;
+	display: block;
+	width: 16px;
+	height: 16px;
+}
+td.mp_var_remove {
+	width: 16px;
+	vertical-align: middle;
+	text-align: left;
+}
+#mp_variation_message {
+	margin-bottom: 5px;
+	float: right;
+}
+.wp_themeSkin iframe {
+  background-color: #FFFFFF !important;
+}
+#mp-need-help {
+	background: transparent url('../images/need-help.png') no-repeat scroll top left;
+	display: block;
+	width: 272px;
+	height: 119px;
+	position: absolute;
+	z-index: 10;
+	float: right;
+	right: 45px;
+}
+.mp-theme-preview {
+	float: left;
+	width: 45%;
+	margin-right: 5%;
+}
+.mp-theme-preview img {
+	float: left;
+	margin-right: 10px;
+	margin-bottom: 1px;
+}
+div.mp-pro-update {
+	background-color: #FFEBE8;
+	border-color: #CC0000;
+	border-radius: 3px 3px 3px 3px;
+	border-style: solid;
+	border-width: 1px;
+	margin: 10px 0;
+	padding: 1em;
+}
+.mp-pro-update {
+	color: red;
+	font-weight: bold;
+>>>>>>> .merge-right.r4715
 }
