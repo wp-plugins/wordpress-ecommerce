@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.4.1
+Version: 2.4.2
 Plugin URI: http://premium.wpmudev.org/project/e-commerce-lite
 Description: The lite version of our complete WordPress ecommerce plugin. Activate the plugin, adjust your <a href="edit.php?post_type=product&amp;page=marketpress">settings</a> then <a href="post-new.php?post_type=product">add some products</a> to your store.
 Author: Aaron Edwards (Incsub)
@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class MarketPress {
 
-  var $version = '2.4.1';
+  var $version = '2.4.2';
   var $location;
   var $plugin_dir = '';
   var $plugin_url = '';

@@ -128,6 +128,10 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 == Changelog ==
 
 
+= 2.4.2 =
+* Fix a fatal bug introduced to the PayPal Express gateway in 2.4.1. Important update!
+* Add sanity checks for long product names into PayPal gateway to prevent errors
+
 = 2.4.1 =
 * WP 3.3 Compatibility - Not backwards compatible
 * Fix negative quantities being able to be added to your cart: http://premium.wpmudev.org/forums/topic/marketpress-security-bug
@@ -355,3 +359,8 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 
 = 1.0 =
 * Initial Release
+
+== Upgrade Notice ==
+
+= 2.4.2 =
+Fixes a fatal bug introduced to the PayPal Express gateway in 2.4.1. Important update!
