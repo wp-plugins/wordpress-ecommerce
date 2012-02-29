@@ -130,7 +130,7 @@ function mp_dropdown_categories( $echo = true, $args = '' ) {
 	var dropdown = document.getElementById("mp_category_dropdown");
 	function onCatChange() {
 		if ( dropdown.options[dropdown.selectedIndex].value > 0 ) {
-			location.href = "<?php echo home_url(); ?>/?product_category="+dropdown.options[dropdown.selectedIndex].value;
+			location.href = "'.get_home_url().'/?product_category="+dropdown.options[dropdown.selectedIndex].value;
 		}
 	}
 	dropdown.onchange = onCatChange;
@@ -205,7 +205,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
       foreach ($cart as $product_id => $variations) {
         foreach ($variations as $variation => $data) {
-          $totals[] = $mp->before_tax_price($data['price']) * $data['quantity'];
+          $totals[] = $mp->before_tax_price($data['price'], $product_id) * $data['quantity'];
 
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 50 ) . '</td>';
@@ -257,8 +257,8 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
     //shipping line
     if ( $shipping_price = array_sum($shipping_prices) ) {
-      if (!$mp->global_cart && has_filter( 'mp_shipping_method_lbl' ))
-        $shipping_method = ' (' . apply_filters( 'mp_shipping_method_lbl', '' ) . ')';
+      if (!$mp->global_cart && apply_filters( 'mp_shipping_method_lbl', '' ))
+        $shipping_method = apply_filters( 'mp_shipping_method_lbl', '' );
       $content .=  '<tr>';
       $content .=  '  <td class="mp_cart_subtotal_lbl" colspan="2">' . __('Shipping:', 'mp') . '</td>';
       $content .=  '  <td class="mp_cart_col_shipping">' . $mp->format_currency('', $shipping_price) . '</td>';
@@ -302,7 +302,7 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
       foreach ($cart as $product_id => $variations) {
         foreach ($variations as $variation => $data) {
-          $totals[] = $mp->before_tax_price($data['price']) * $data['quantity'];
+          $totals[] = $mp->before_tax_price($data['price'], $product_id) * $data['quantity'];
 
           $content .=  '<tr>';
           $content .=  '  <td class="mp_cart_col_thumb">' . mp_product_image( false, 'widget', $product_id, 75 ) . '</td>';
@@ -341,8 +341,10 @@ function _mp_cart_table($type = 'checkout', $echo = false) {
 
     //shipping line
     if ( $shipping_price = array_sum($shipping_prices) ) {
+      if (!$mp->global_cart && apply_filters( 'mp_shipping_method_lbl', '' ))
+        $shipping_method = ' (' . apply_filters( 'mp_shipping_method_lbl', '' ) . ')';
       $content .=  '<tr>';
-      $content .=  '  <td class="mp_cart_subtotal_lbl" colspan="3">' . __('Shipping:', 'mp') . '</td>';
+      $content .=  '  <td class="mp_cart_subtotal_lbl" colspan="3">' . __('Shipping:', 'mp') . $shipping_method . '</td>';
       $content .=  '  <td class="mp_cart_col_shipping">' . $mp->format_currency('', $shipping_price) . '</td>';
       $content .=  '</tr>';
       $total = $total + $shipping_price;
@@ -515,7 +517,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
       $content .= '<tr>';
       $content .= '<td align="right">'.__('Country:', 'mp').'*</td><td>';
       $content .= apply_filters( 'mp_checkout_error_country', '' );
-      $content .= '<select id="mp_country" name="country">';
+      $content .= '<select id="mp_country" name="country" class="mp_shipping_field">';
       foreach ((array)$settings['shipping']['allowed_countries'] as $code) {
         $content .= '<option value="'.$code.'"'.selected($country, $code, false).'>'.esc_attr($mp->countries[$code]).'</option>';
       }
@@ -538,7 +540,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
       $content .= '<tr>';
       $content .= '<td align="right">'.__('City:', 'mp').'*</td><td>';
       $content .= apply_filters( 'mp_checkout_error_city', '' );
-      $content .= '<input size="25" name="city" type="text" value="'.esc_attr($city).'" /></td>';
+      $content .= '<input size="25" id="mp_city" class="mp_shipping_field" name="city" type="text" value="'.esc_attr($city).'" /></td>';
       $content .= '</tr>';
       $content .= '<tr>';
       $content .= '<td align="right">'.__('State/Province/Region:', 'mp').'*</td><td id="mp_province_field">';
@@ -548,7 +550,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
       $content .= '<tr>';
       $content .= '<td align="right">'.__('Postal/Zip Code:', 'mp').'*</td><td>';
       $content .= apply_filters( 'mp_checkout_error_zip', '' );
-      $content .= '<input size="10" id="mp_zip" name="zip" type="text" value="'.esc_attr($zip).'" /></td>';
+      $content .= '<input size="10" class="mp_shipping_field" id="mp_zip" name="zip" type="text" value="'.esc_attr($zip).'" /></td>';
       $content .= '</tr>';
       $content .= '<tr>';
       $content .= '<td align="right">'.__('Phone Number:', 'mp').'</td><td>';
@@ -567,8 +569,9 @@ function _mp_cart_shipping($editable = false, $echo = false) {
 
     $content .= '</tbody>';
     $content .= '</table>';
-
+    
     $content .= apply_filters( 'mp_checkout_after_shipping', '' );
+    
     $content .= '<p class="mp_cart_direct_checkout">';
     $content .= '<input type="submit" name="mp_shipping_submit" id="mp_shipping_submit" value="'.__('Continue Checkout &raquo;', 'mp').'" />';
     $content .= '</p>';
@@ -579,7 +582,7 @@ function _mp_cart_shipping($editable = false, $echo = false) {
     $content .= '<table class="mp_cart_shipping">';
     $content .= '<thead><tr>';
     $content .= '<th>'.__('Shipping Information:', 'mp').'</th>';
-    $content .= '<th align="right"><a href="'.mp_checkout_step_url('shipping').'">'.__('&laquo; Edit', 'mp').'</a></th>';
+    $content .= '<th align="right"><a href="'.mp_checkout_step_url('shipping').'">'.__('Edit', 'mp').'</a></th>';
     $content .= '</tr></thead>';
     $content .= '<tbody>';
     $content .= '<tr>';
@@ -630,7 +633,9 @@ function _mp_cart_shipping($editable = false, $echo = false) {
       $content .= '<td>'.esc_attr($phone).'</td>';
       $content .= '</tr>';
     }
-
+    
+    $content .= apply_filters( 'mp_checkout_shipping_field_readonly', '' );
+    
     $content .= '</tbody>';
     $content .= '</table>';
   }
@@ -1155,7 +1160,7 @@ function mp_province_field($country = 'US', $selected = null) {
   
   $content = ''; 
   if ($list) {
-    $content .= '<select id="mp_state" name="state">';
+    $content .= '<select id="mp_state" class="mp_shipping_field" name="state">';
     $content .= '<option value="">'.__('Select:', 'mp').'</option>';
     foreach ($list as $abbr => $label)
       $content .= '<option value="'.$abbr.'"'.selected($selected, $abbr, false).'>'.esc_attr($label).'</option>';
@@ -1275,7 +1280,8 @@ function mp_list_products( $echo = true, $paginate = '', $page = '', $per_page =
       $content .= '<h3 class="mp_product_name"><a href="' . get_permalink( $post->ID ) . '">' . $post->post_title . '</a></h3>';
       $content .= '<div class="mp_product_content">';
       $product_content = mp_product_image( false, 'list', $post->ID );
-      $product_content .= $mp->product_excerpt($post->post_excerpt, $post->post_content, $post->ID);
+      if ($settings['show_excerpt'] == 1)
+        $product_content .= $mp->product_excerpt($post->post_excerpt, $post->post_content, $post->ID);
       $content .= apply_filters( 'mp_product_list_content', $product_content, $post->ID );
       $content .= '</div>';
 
@@ -1444,7 +1450,7 @@ function mp_product_price( $echo = true, $post_id = NULL, $label = true ) {
 	}
 
   if ((is_array($meta["mp_price"]) && count($meta["mp_price"]) == 1) || !empty($meta["mp_file"])) {
-    if ($meta["mp_is_sale"] && $meta["mp_sale_price"][0]) {
+    if ($meta["mp_is_sale"]) {
 	    $price = '<span class="mp_special_price"><del class="mp_old_price">'.$mp->format_currency('', $meta["mp_price"][0]).'</del>';
 	    $price .= '<span class="mp_current_price">'.$mp->format_currency('', $meta["mp_sale_price"][0]).'</span></span>';
 	  } else {
@@ -1514,6 +1520,10 @@ function mp_buy_button( $echo = true, $context = 'list', $post_id = NULL ) {
 
     $button = '<a class="mp_link_buynow" href="' . esc_url($product_link) . '">' . __('Buy Now &raquo;', 'mp') . '</a>';
 
+  } else if ($settings['disable_cart']) {
+    
+    $button = '';
+    
   } else {
 
     $button = '<form class="mp_buy_form" method="post" action="' . mp_cart_link(false, true) . '">';
@@ -1633,7 +1643,7 @@ function mp_product_image( $echo = true, $context = 'list', $post_id = NULL, $si
     $link = $temp[0];
 
     $title = __('View Larger Image &raquo;', 'mp');
-    $class = ' class="mp_product_image_link mp_lightbox"';
+    $class = ' class="mp_product_image_link mp_lightbox" rel="lightbox"';
 
   } else if ($context == 'widget') {
     //size

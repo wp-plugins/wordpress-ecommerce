@@ -1,5 +1,5 @@
 /*
-MarketPress Theme: Icons
+MarketPress Style: Icons
 */
 
 /* icons by FamFam http://www.famfamfam.com/lab/icons/silk/ */
@@ -19,7 +19,7 @@ float: left;
 }
 
 .mp_product_price {
-line-height: 40px;
+	line-height: 40px;
 	background: url('modern-images/money.png') no-repeat 0 2px;
 	margin-right: 10px;
 	padding: 0px 0px 0px 20px;

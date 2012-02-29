@@ -13,6 +13,10 @@ class My_Plugin_Name extends MP_Shipping_API {
   
   //set to true if you need to use the shipping_metabox() method to add per-product shipping options
   var $use_metabox = false;
+	
+	//set to true if you want to add per-product weight shipping field
+	var $use_weight = true;
+
 
   /**
    * Runs when your class is instantiated. Use to setup your plugin instead of __construct()
@@ -25,22 +29,22 @@ class My_Plugin_Name extends MP_Shipping_API {
   /**
    * Echo anything you want to add to the top of the shipping screen
    */
-	function before_shipping_form() {
-
+	function before_shipping_form($content) {
+		return $content;
   }
   
   /**
    * Echo anything you want to add to the bottom of the shipping screen
    */
-	function after_shipping_form() {
-
+	function after_shipping_form($content) {
+		return $content;
   }
   
   /**
-   * Echo a table row with any extra shipping fields you need to add to the form
+   * Echo a table row with any extra shipping fields you need to add to the shipping checkout form
    */
-	function extra_shipping_field() {
-
+	function extra_shipping_field($content) {
+		return $content;
   }
   
   /**
@@ -91,26 +95,48 @@ class My_Plugin_Name extends MP_Shipping_API {
   }
   
   /**
-   * Use this function to return your calculated price as an integer or float
-   *
-   * @param int $price, always 0. Modify this and return
-   * @param float $total, cart total after any coupons and before tax
-   * @param array $cart, the contents of the shopping cart for advanced calculations
-   * @param string $address1
-   * @param string $address2
-   * @param string $city
-   * @param string $state, state/province/region
-   * @param string $zip, postal code
-   * @param string $country, ISO 3166-1 alpha-2 country code
-   *
-   * return float $price
-   */
-	function calculate_shipping($price, $total, $cart, $address1, $address2, $city, $state, $zip, $country) {
+		* Use this function to return your calculated price as an integer or float
+		*
+		* @param int $price, always 0. Modify this and return
+		* @param float $total, cart total after any coupons and before tax
+		* @param array $cart, the contents of the shopping cart for advanced calculations
+		* @param string $address1
+		* @param string $address2
+		* @param string $city
+		* @param string $state, state/province/region
+		* @param string $zip, postal code
+		* @param string $country, ISO 3166-1 alpha-2 country code
+		* @param string $selected_option, if a calculated shipping module, passes the currently selected sub shipping option if set
+		*
+		* return float $price
+		*/
+	function calculate_shipping($price, $total, $cart, $address1, $address2, $city, $state, $zip, $country, $selected_option) {
     return $price;
   }
-
+	
+	/**
+		* For calculated shipping modules, use this method to return an associative array of the sub-options. The key will be what's saved as selected
+		*  in the session. Note the shipping parameters won't always be set. If they are, add the prices to the labels for each option.
+		*
+		* @param array $cart, the contents of the shopping cart for advanced calculations
+		* @param string $address1
+		* @param string $address2
+		* @param string $city
+		* @param string $state, state/province/region
+		* @param string $zip, postal code
+		* @param string $country, ISO 3166-1 alpha-2 country code
+		*
+		* return array $shipping_options 
+		*/
+	function shipping_options($cart, $address1, $address2, $city, $state, $zip, $country) {
+		
+		$shipping_options = array();
+		
+		return $shipping_options;
+	}
+	
 }
 
 //register plugin - uncomment to register
-//mp_register_shipping_plugin( 'My_Plugin_Name', 'my-plugin-name', __('My Plugin', 'mp') );
+//mp_register_shipping_plugin( 'My_Plugin_Name', 'my-plugin-name', __('My Plugin', 'mp'), false );
 ?>

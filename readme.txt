@@ -2,7 +2,7 @@
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.3
-Tested up to: 3.3
+Tested up to: 3.3.1
 Stable tag: trunk
 
 The best free ecommerce plugin available for WordPress - easy to use, beautiful & powerful.
@@ -127,6 +127,38 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 
 == Changelog ==
 
+= 2.5.1 =
+* Fix bugs with iDEAL gateway
+* Add support for multiple iDEAL banks
+* Rename Store Themes to Store Styles to avoid terminology confusion
+* Switch lightbox to GPL compatible lumebox
+* WPML compatibility fixes
+* Add a full CSV product importer!
+* Add orders exporting as CSV by year and month
+* Add weight based shipping module
+* Add support for calculated shipping modules
+* Add USPS calculated shipping module!
+* Add order statistics dashboard widget
+* Add store info to right now widget
+* Add Log entry for cubpoints gateway checkouts
+* Add "Only show on store pages" option to all widgets
+* Add setting to disable excerpts in product lists
+* Add per product special tax rates
+* Add Pro Sites level recognition for multisite: http://premium.wpmudev.org/forums/topic/feature-request-advanced-integration-of-marketpress-and-pro-sites
+* Add Stripe payment gateway! Accept credit cards directly on your site with full PCI compliance
+* Add custom API url support to Authorize.net gateway for compatibility with many 3rd party gateways
+* Add beta PayPal Payflow Pro gateway
+* Add beta iDEAL gateway (ING bank only)
+* Add setting to hide Product Image on single pages
+* Fix translation issues for gateway and shipping plugin names
+* Fix bug with category dropdown widget
+* Fix custom menu current item highlighting in WP 3.3
+* Fix tax calculation bug with Google Checkout gateway for orders with no tax
+* Fix lightbox z-index on Twenty Eleven theme
+* Make shipping fields behavior consistent with global cart enabled
+* Fix currency rounding problem for large prices with decimals off
+* Remove add to cart button when in product listing mode and no custom link set
+* Allow $0 sale prices
 
 = 2.4.2 =
 * Fix a fatal bug introduced to the PayPal Express gateway in 2.4.1. Important update!
