@@ -98,10 +98,10 @@ What else could I get in the premium version?
 
 * Product downloads - sell digital goods!
 * Powerful coupon codes for your store with usage tracking and limits
-* Access to all gateways including:  2Checkout, Authorize.NET AIM, Google Checkout, Moneybookers, and PayPal chained payments
-* More built-in themes, or add your own simple CSS based themes
+* Access to all gateways including:  2Checkout, Authorize.NET AIM, Google Checkout, Moneybookers, Stripe, Payflow Pro, iDEAL, and PayPal chained payments
+* More built-in styles, or add your own simple CSS based styles
 * Multisite marketplace features - product lists, tags, categories, widgets, and shortcodes
-* Charge for store upgrades like themes and gateways with our Supporter plugin
+* Charge for store upgrades like styles and gateways with our Pro Sites plugin
 * Global Shopping Carts
 * Ability for Network owner to take a percentage of each marketplace sale through the PayPal chained payment gateway
 * Import digital downloads from WP e-Commerce into MarketPress!
