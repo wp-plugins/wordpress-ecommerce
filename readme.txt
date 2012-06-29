@@ -1,4 +1,4 @@
-=== WordPress eCommerce - MarketPress ===
+=== MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.3
