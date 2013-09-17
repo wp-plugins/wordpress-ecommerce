@@ -2,7 +2,7 @@
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
 Requires at least: 3.3
-Tested up to: 3.3.1
+Tested up to: 3.6.1
 Stable tag: trunk
 
 The best free ecommerce plugin available for WordPress - easy to use, beautiful & powerful.
