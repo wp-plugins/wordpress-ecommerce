@@ -100,33 +100,31 @@ class MP_Shipping_Weight_Rate extends MP_Shipping_API {
      		</th>
      	</tr>
         <?php
-		switch ($settings['base_country'])
-        {
+		switch ($settings['base_country']) {
             case 'US':
         ?>
-                <tr>
-                    <td scope="row"><?php _e('If weight is ', 'mp'); ?><input type="text" name="mp[shipping][weight-rate][0][minweight]" value="0.01" size="5" maxlength="10" disabled="disabled" /><?php _e(' and above.', 'mp'); ?>
-                                          <?php _e('Shipping Cost - Lower 48 States:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][lower_48]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['lower_48']); ?>" size="5" maxlength="10" />
-                                          <?php _e('Hawaii and Alaska:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][hi_ak]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['hi_ak']); ?>" size="5" maxlength="10" />
-                                          <?php _e('Canada:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][canada]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['canada']); ?>" size="5" maxlength="10" />
-                                          <?php _e('International:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][international]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['international']); ?>" size="5" maxlength="10" />
-                    </td>
-                </tr>
-                    <?php
-                    for ( $i = 1; $i < $settings['shipping']['weight-rate']['rowcount']; $i++ )
-                    {
-                    ?>
-                        <tr>
-                            <td scope="row">
-								<?php _e('If weight is ', 'mp'); ?><input type="text" name="mp[shipping][weight-rate][<?php echo $i; ?>][minweight]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['minweight']); ?>" size="5" maxlength="10" /><?php _e(' and above.', 'mp'); ?>
-                                <?php _e('Shipping Cost - Lower 48 States:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][lower_48]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['lower_48']); ?>" size="5" maxlength="10" />
-                                <?php _e('Hawaii and Alaska:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][hi_ak]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['hi_ak']); ?>" size="5" maxlength="10" />
-                                <?php _e('Canada:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][canada]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['canada']); ?>" size="5" maxlength="10" />
-                                <?php _e('International:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][international]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['international']); ?>" size="5" maxlength="10" />
-                            </td>
-                        </tr>
-                    <?php
-                    }
+				<tr>
+					<td scope="row"><?php _e('If weight is ', 'mp'); ?><input type="text" name="mp[shipping][weight-rate][0][minweight]" value="0.01" size="5" maxlength="10" disabled="disabled" /><?php _e(' and above.', 'mp'); ?>
+						<?php _e('Shipping Cost - Lower 48 States:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][lower_48]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['lower_48']); ?>" size="5" maxlength="10" />
+						<?php _e('Hawaii and Alaska:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][hi_ak]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['hi_ak']); ?>" size="5" maxlength="10" />
+						<?php _e('Canada:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][canada]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['canada']); ?>" size="5" maxlength="10" />
+						<?php _e('International:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][0][international]" value="<?php echo esc_attr($settings['shipping']['weight-rate']['0']['international']); ?>" size="5" maxlength="10" />
+					</td>
+				</tr>
+				<?php
+				for ( $i = 1; $i < $settings['shipping']['weight-rate']['rowcount']; $i++ ) {
+				?>
+				<tr>
+					<td scope="row">
+						<?php _e('If weight is ', 'mp'); ?><input type="text" name="mp[shipping][weight-rate][<?php echo $i; ?>][minweight]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['minweight']); ?>" size="5" maxlength="10" /><?php _e(' and above.', 'mp'); ?>
+						<?php _e('Shipping Cost - Lower 48 States:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][lower_48]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['lower_48']); ?>" size="5" maxlength="10" />
+						<?php _e('Hawaii and Alaska:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][hi_ak]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['hi_ak']); ?>" size="5" maxlength="10" />
+						<?php _e('Canada:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][canada]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['canada']); ?>" size="5" maxlength="10" />
+						<?php _e('International:', 'mp'); echo $mp->format_currency(); ?><input on type="text" name="mp[shipping][weight-rate][<?php echo $i?>][international]" value="<?php echo esc_attr($settings['shipping']['weight-rate'][$i]['international']); ?>" size="5" maxlength="10" />
+					</td>
+				</tr>
+				<?php
+				}
 			break;
 			case 'CA':
 					?>
@@ -219,8 +217,23 @@ class MP_Shipping_Weight_Rate extends MP_Shipping_API {
    *  array. Don't forget to return!
    */
 	function process_shipping_settings($settings) {
-
-    return $settings;
+		//sanitize the price fields
+		function sanitize_rates(&$value, $key) {
+			global $mp;
+			if (!is_array($value)) {
+				if ($key == 'rowcount')
+					$value = intval($value);
+				else if ($key == 'minweight')
+					$value = round(preg_replace('/[^0-9.]/', '', $value), 2);
+				else
+					$value = $mp->display_currency(preg_replace('/[^0-9.]/', '', $value));
+			}
+		}
+		
+		if (is_array($settings['shipping']['weight-rate']))
+			array_walk_recursive($settings['shipping']['weight-rate'], 'sanitize_rates');
+			
+		return $settings;
   }
 
   /**
@@ -245,23 +258,23 @@ class MP_Shipping_Weight_Rate extends MP_Shipping_API {
   }
 
   /**
-* Use this function to return your calculated price as an integer or float
-*
-* @param int $price, always 0. Modify this and return
-* @param float $total, cart total after any coupons and before tax
-* @param array $cart, the contents of the shopping cart for advanced calculations
-* @param string $address1
-* @param string $address2
-* @param string $city
-* @param string $state, state/province/region
-* @param string $zip, postal code
-* @param string $country, ISO 3166-1 alpha-2 country code
-* @param string $selected_option, if a calculated shipping module, passes the currently selected sub shipping option if set
-*
-* return float $price
-*/
-function calculate_shipping($price, $total, $cart, $address1, $address2, $city, $state, $zip, $country, $selected_option) {
-			global $mp;
+	* Use this function to return your calculated price as an integer or float
+	*
+	* @param int $price, always 0. Modify this and return
+	* @param float $total, cart total after any coupons and before tax
+	* @param array $cart, the contents of the shopping cart for advanced calculations
+	* @param string $address1
+	* @param string $address2
+	* @param string $city
+	* @param string $state, state/province/region
+	* @param string $zip, postal code
+	* @param string $country, ISO 3166-1 alpha-2 country code
+	* @param string $selected_option, if a calculated shipping module, passes the currently selected sub shipping option if set
+	*
+	* return float $price
+	*/
+	function calculate_shipping($price, $total, $cart, $address1, $address2, $city, $state, $zip, $country, $selected_option) {
+		global $mp;
     $settings = get_option('mp_settings');
 
     //calculate extra shipping
@@ -293,7 +306,7 @@ function calculate_shipping($price, $total, $cart, $address1, $address2, $city, 
 						$price = $settings['shipping']['weight-rate'][$i]['canada'];
 				  	else
 						$price = $settings['shipping']['weight-rate'][$i]['international'];
-					break;
+						break;
 			  	}
 		  	}
 		break;
@@ -308,9 +321,9 @@ function calculate_shipping($price, $total, $cart, $address1, $address2, $city, 
 						$price = $settings['shipping']['weight-rate'][$i]['usa'];
 					else
 						$price = $settings['shipping']['weight-rate'][$i]['international'];
-				}
-				break;
-		  	}
+					break;
+				}				
+		  }
 		break;
 		default:
 			for ($i = $settings['shipping']['weight-rate']['rowcount'] - 1; $i >= 0; $i--)
@@ -319,18 +332,18 @@ function calculate_shipping($price, $total, $cart, $address1, $address2, $city, 
 			  	{
 					if ( in_array($settings['base_country'], $mp->eu_countries) )  //in european union
 				  	{
-						if ($country == $settings['base_country'])
-							$price = $settings['shipping']['weight-rate'][$i]['in_country'];
+							if ($country == $settings['base_country'])
+								$price = $settings['shipping']['weight-rate'][$i]['in_country'];
 					  	else if (in_array($country, $mp->eu_countries))
 						  	$price = $settings['shipping']['weight-rate'][$i]['eu'];
 					  	else
-							$price = $settings['shipping']['weight-rate'][$i]['international'];
+								$price = $settings['shipping']['weight-rate'][$i]['international'];
 				  	}
 				  	else  //all other countries
 				  	{
 						if ($country == $settings['base_country'])
 							$price = $settings['shipping']['weight-rate'][$i]['in_country'];
-					  	else
+					  else
 							$price = $settings['shipping']['weight-rate'][$i]['international'];
 					}
 				 	break;
@@ -345,4 +358,3 @@ function calculate_shipping($price, $total, $cart, $address1, $address2, $city, 
 
 //register plugin - uncomment to register
 mp_register_shipping_plugin( 'MP_Shipping_Weight_Rate', 'weight-rate', __('Weight Rate', 'mp') );
-?>

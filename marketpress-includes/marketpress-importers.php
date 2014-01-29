@@ -10,10 +10,6 @@ class MarketPress_Importer {
   var $importer_name = '';
 	var $results;
   
-	function MarketPress_Importer() {
-		$this->__construct();
-	}
-	
   function __construct() {
     global $mp;
 		
@@ -63,7 +59,7 @@ class MarketPress_Importer {
 	function process() {
 		
 	}
-	
+
 }
 
 /* ------------------------------------------------------------------ */
@@ -96,7 +92,13 @@ class WP_eCommerceImporter extends MarketPress_Importer {
 	
 				<p><?php printf( __('It appears that you have %s products from WP e-Commerce. Click below to begin your import!', 'mp'), number_format_i18n($num_products) ); ?></p>
 				<?php
-				$this->import_button(); 
+				if ( class_exists('WP_eCommerce') ) {
+					$this->import_button();
+				} else {
+					?>
+					<p><?php _e('Please activate the WP e-Commerce plugin to import these products.', 'mp'); ?></p>
+					<?php
+				}
 	    } else { //no products
         ?>
 				<p><?php printf( __('It appears you have no products from WP e-Commerce to import. Check that the plugin is updated to the latest version (the importer only works with >3.8).', 'mp'), wp_nonce_url(admin_url('plugins.php?action=deactivate&plugin=wp-e-commerce%2Fwp-shopping-cart.php'), 'deactivate-plugin_wp-e-commerce/wp-shopping-cart.php') ); ?></p>
@@ -165,10 +167,14 @@ class WP_eCommerceImporter extends MarketPress_Importer {
 			if (!empty($meta_data['external_link']))
 				update_post_meta($new_id, 'mp_product_link', esc_url_raw($meta_data['external_link']));
 
-			//add extra shipping
-			if (isset($meta_data['shipping']['local']) && $meta_data['shipping']['local'])
-				update_post_meta($new_id, 'mp_shipping', array( 'extra_cost' => $meta_data['shipping']['local'] ) );
-
+			//add shipping info
+			$shipping = array();
+			if (!empty($meta_data['shipping']['local']))
+				$shipping['extra_cost'] = round( (float)preg_replace('/[^0-9.]/', '', $meta_data['shipping']['local']), 2 );
+			if (!empty($meta_data['weight']))
+				$shipping['weight'] = round( (float)preg_replace('/[^0-9.]/', '', $meta_data['weight']), 2 );
+			update_post_meta($new_id, 'mp_shipping', $shipping);
+			
 			//add thumbnail
 			if (isset($meta['_thumbnail_id'][0])) { //if featured image is set
 				update_post_meta($new_id, '_thumbnail_id', $meta['_thumbnail_id'][0]);
@@ -269,10 +275,11 @@ class CsvImporter extends MarketPress_Importer {
 				$this->import_button();
 				
 			} else { //file does not exist, show upload form
-			
+				$dirs = wp_upload_dir();
 				?>
 				<span class="description"><?php _e('This will allow you to import products and most of their attributes from a CSV file.', 'mp'); ?></span>
-				<p><span class="description"><?php _e('Your CSV file must be comma (,) delimited and fields with commas or quotes in them must be surrounded by parenthesis (") as per the CSV standard. Columns in the CSV file can be in any order, provided that they have the correct headings from the example file. "title" and "price" are the only required columns, all others can be left blank. A spreadsheet program like Excel or Numbers can be used to easily manipulate your import file, and their save as CSV option will create a correctly formatted file.', 'mp'); ?></span></p>
+				<p><span class="description"><?php _e('Your CSV file must be comma (,) delimited and fields with commas or quotes in them must be surrounded by parenthesis (") as per the CSV standard. Columns in the CSV file can be in any order, provided that they have the correct headings from the example file. "title" and "price" are the only required columns, all others can be left blank.', 'mp'); ?></span></p>
+				<p><span class="description"><?php printf(__('To import featured images, it is preferable to upload them via FTP to a directory in your WP uploads folder: %s. Image paths should be relative to the uploads folder, like "/myimport/myimage.png". You may also include full external image urls and the importer will download them. This is not a preferable though because it can be too slow for a large import, and you may need to split your CSV file into multple imports to avoid timeouts. A spreadsheet program like Excel or Numbers can be used to easily manipulate your import file, and their save as CSV option will create a correctly formatted file.', 'mp'), $dirs['basedir']); ?></span></p>
 				
 				<p><?php _e('Please select and upload your CSV file below.', 'mp'); ?> 
 				<a href="<?php echo $mp->plugin_url; ?>sample-marketpress-import.csv" target="_blank"><?php _e('Use this example file &raquo;', 'mp'); ?></a>
@@ -280,7 +287,7 @@ class CsvImporter extends MarketPress_Importer {
 				
 				<p>
 					<input name="csv_file" id="csv_file" size="20" type="file" /> 
-					<input name="Submit" value="<?php _e('Upload &raquo;', 'mp') ?>" type="submit"><br />
+					<input class="button-secondary" name="Submit" value="<?php _e('Upload &raquo;', 'mp') ?>" type="submit"><br />
 					<small><?php echo __('Maximum file size: ', 'mp') . ini_get('upload_max_filesize'); ?></small>
 				</p>
 				<?php
@@ -292,12 +299,12 @@ class CsvImporter extends MarketPress_Importer {
 	function process() {
 	  global $wpdb;
 
-		set_time_limit(90); //this can take a while
+		set_time_limit(120); //this can take a while
 		$this->results = 0;
 		$products = $this->get_csv_array();
+		$dirs = wp_upload_dir();
 		
 		foreach ($products as $row) {
-			
 			$product = array();
 			
 			if (empty($row['title']) || empty($row['price']))
@@ -336,7 +343,7 @@ class CsvImporter extends MarketPress_Importer {
 				update_post_meta($new_id, 'mp_price_sort', round( (float)preg_replace('/[^0-9.]/', '', $row['sale_price']), 2 ));
 			} else {
 				update_post_meta($new_id, 'mp_is_sale', 0);
-				update_post_meta($new_id, 'mp_price_sort', round( (float)preg_replace('/[^0-9.]/', '', $row['mp_price']), 2 ));
+				update_post_meta($new_id, 'mp_price_sort', round( (float)preg_replace('/[^0-9.]/', '', $row['price']), 2 ));
 			}
 
 			//add stock count if set
@@ -358,9 +365,6 @@ class CsvImporter extends MarketPress_Importer {
 			if (!empty($row['weight']))
 				$shipping['weight'] = round( (float)preg_replace('/[^0-9.]/', '', $row['weight']), 2 );
 			update_post_meta($new_id, 'mp_shipping', $shipping);
-
-			//add thumbnail
-			//update_post_meta($new_id, '_thumbnail_id', $meta['_thumbnail_id'][0]);
 				
 			//download
 			if (!empty($row['download_url']))
@@ -370,7 +374,55 @@ class CsvImporter extends MarketPress_Importer {
 			if (isset($row['sales_count']))
 				update_post_meta($new_id, 'mp_sales_count', intval($row['sales_count']));
 			
-			
+			//add featured images
+			if (isset($row['image']) && !empty($row['image'])) {
+				
+				// Determine if this file is in our server
+				$local = false;
+				$img_location = str_replace($dirs['baseurl'], $dirs['basedir'], $row['image']);
+				if ( file_exists($img_location) ) {
+					$local = true;
+				} else if ( file_exists($dirs['basedir'] . '/' . ltrim($row['image'], '/')) ) {
+					$local = true;
+					$img_location = $dirs['basedir'] . '/' . ltrim($row['image'], '/');
+				}
+				if ( $local ) { //just resize without downloading as it's on our server
+					preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $img_location, $matches );
+					$file_array = array();
+					$file_array['name'] = basename($matches[0]);
+					$file_array['tmp_name'] = $img_location;
+					
+					// do the validation and storage stuff
+					$id = media_handle_sideload( $file_array, $new_id, $row['title'] );
+					// If error storing permanently, unlink
+					if ( !is_wp_error($id) ) {
+						// add featured image to post
+						add_post_meta($new_id, '_thumbnail_id', $id);
+					}
+				} else { //download the image and attach
+					require_once(ABSPATH . '/wp-admin/includes/file.php');
+					$img_html = media_sideload_image( $row['image'], $new_id, $row['title'] );
+					if ( !is_wp_error($img_html) ) {
+						//figure out the id
+						$args = array(
+							'numberposts' => 1,
+							'order'=> 'DESC',
+							'post_mime_type' => 'image',
+							'post_parent' => $new_id,
+							'post_type' => 'attachment'
+							);
+						
+						$get_children_array = get_children($args, ARRAY_A);  //returns Array ( [$image_ID]... 
+						$rekeyed_array = array_values($get_children_array);
+						$child_image = $rekeyed_array[0];  
+						
+						// add featured image to post
+						add_post_meta($new_id, '_thumbnail_id', $child_image['ID']);
+					}
+				}
+				
+	    }
+
 			//inc count
 			$this->results++;
 		}	
@@ -414,9 +466,8 @@ class CsvImporter extends MarketPress_Importer {
 					foreach ($temp_fields as $key => $value) {
 						$new_fields[$titles[$key]] = $value;
 					}
+					$fields[] = $new_fields;
 				}
-				
-				$fields[] = $new_fields;
 			}
 	
 	
@@ -442,4 +493,3 @@ class CsvImporter extends MarketPress_Importer {
 }
 //only load if the plugin is active and installed
 $mp_csv = new CsvImporter();
-?>

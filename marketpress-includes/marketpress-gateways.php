@@ -148,8 +148,8 @@ if(!class_exists('MP_Gateway_API')) {
 		
 		//populates ipn_url var
 		function _generate_ipn_url() {
-      $settings = get_option('mp_settings');
-      $this->ipn_url = home_url($settings['slugs']['store'] . '/payment-return/' . $this->plugin_name);
+			global $mp;
+      $this->ipn_url = home_url($mp->get_setting('slugs->store') . '/payment-return/' . $this->plugin_name);
     }
     
 		//populates ipn_url var
@@ -161,8 +161,7 @@ if(!class_exists('MP_Gateway_API')) {
 		function _payment_form_wrapper($content, $cart, $shipping_info) {
       global $mp, $mp_gateway_active_plugins;
       
-      if (count((array)$mp_gateway_active_plugins) > 1 && $_SESSION['mp_payment_method'] != $this->plugin_name)
-        $hidden = ' style="display:none;"';
+      $hidden = (count((array)$mp_gateway_active_plugins) > 1 && $_SESSION['mp_payment_method'] != $this->plugin_name) ? ' style="display:none;"' : '';
         
       $content .= '<div class="mp_gateway_form" id="' . $this->plugin_name . '"' . $hidden . '>';
       $content .= $this->payment_form($cart, $shipping_info);
@@ -179,16 +178,12 @@ if(!class_exists('MP_Gateway_API')) {
       global $wp_query, $mp;
 
       if ($wp_query->query_vars['pagename'] == 'cart') {
-        if ($wp_query->query_vars['checkoutstep'] == 'confirmation')
+        if (isset($wp_query->query_vars['checkoutstep']) && $wp_query->query_vars['checkoutstep'] == 'confirmation')
           do_action( 'mp_checkout_payment_pre_confirmation_' . $_SESSION['mp_payment_method'], $mp->get_order($_SESSION['mp_order']) );
       }
     }
     
     //DO NOT override the construct! instead use the on_creation() method.
-  	function MP_Gateway_API() {
-  		$this->__construct();
-  	}
-
     function __construct() {
     
       $this->_generate_ipn_url();
@@ -238,4 +233,3 @@ function mp_register_gateway_plugin($class_name, $plugin_name, $admin_name, $glo
 		return false;
 	}
 }
-?>

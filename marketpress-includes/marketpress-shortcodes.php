@@ -5,10 +5,6 @@ MarketPress Shortcode Support
 
 class MarketPress_Shortcodes {
 
-	function MarketPress_Shortcodes() {
-		$this->__construct();
-	}
-
   function __construct() {
 
     //register our shortcodes
@@ -16,7 +12,14 @@ class MarketPress_Shortcodes {
     add_shortcode( 'mp_list_categories', array(&$this, 'mp_list_categories_sc') );
     add_shortcode( 'mp_dropdown_categories', array(&$this, 'mp_dropdown_categories_sc') );
     add_shortcode( 'mp_popular_products', array(&$this, 'mp_popular_products_sc') );
+		add_shortcode( 'mp_related_products', array(&$this, 'mp_related_products_sc') );
     add_shortcode( 'mp_list_products', array(&$this, 'mp_list_products_sc') );
+    add_shortcode( 'mp_product', array(&$this, 'mp_product_sc') );
+    add_shortcode( 'mp_product_image', array(&$this, 'mp_product_image_sc') );
+    add_shortcode( 'mp_buy_button', array(&$this, 'mp_buy_button_sc') );
+    add_shortcode( 'mp_product_price', array(&$this, 'mp_product_price_sc') );
+    add_shortcode( 'mp_product_meta', array(&$this, 'mp_product_meta_sc') );
+    add_shortcode( 'mp_product_sku', array(&$this, 'mp_product_sku_sc') );
 
     //store links
     add_shortcode( 'mp_cart_link', array(&$this, 'mp_cart_link_sc') );
@@ -134,6 +137,21 @@ class MarketPress_Shortcodes {
 
     return mp_popular_products(false, $number);
   }
+  
+  /**
+   * Displays related products for the passed product id
+   *
+   * @param int $product_id. 
+   * @param string $relate_by Optional, whether to limit related to the same category, tags or both.
+   * @param bool $echo. Optional, whether to echo or return the results
+   * @param int $limit. Optional The number of products we want to retrieve.
+   * @param bool $simple_list Optional, whether to show the related products based on the "list_view" setting or as a simple unordered list
+   */
+  function mp_related_products_sc($atts) {
+  	global $mp;
+  	$args = shortcode_atts($mp->defaults['related_products'], $atts);
+		return mp_related_products($args);
+  }
 
   /*
    * Displays a list of products according to preference. Optional values default to the values in Presentation Settings -> Product List
@@ -145,21 +163,119 @@ class MarketPress_Shortcodes {
    * @param string order Optional, Direction to order products by. Can be: DESC, ASC
    * @param string category Optional, limit to a product category
    * @param string tag Optional, limit to a product tag
+   * @param bool list_view Optional, show as list. Grid default
+   * @param bool filters Optional, show filters
    */
   function mp_list_products_sc($atts) {
+  	global $mp;
+    $args = shortcode_atts($mp->defaults['list_products'], $atts);
+    return mp_list_products($args);
+  }
+	
+	/*
+	* Displays a single product according to preference
+	* 
+	* @param int $product_id the ID of the product to display
+	* @param bool $title Whether to display the title
+	* @param bool/string $content Whether and what type of content to display. Options are false, 'full', or 'excerpt'. Default 'full'
+	* @param bool/string $image Whether and what context of image size to display. Options are false, 'single', or 'list'. Default 'single'
+	* @param bool $meta Whether to display the product meta
+  */
+  function mp_product_sc($atts) {
     extract(shortcode_atts(array(
-  		'paginate' => '',
-  		'page' => '',
-  		'per_page' => '',
-  		'order_by' => '',
-  		'order' => '',
-  		'category' => '',
-  		'tag' => ''
+  		'product_id' => false,
+  		'title' => true,
+  		'content' => 'full',
+  		'image' => 'single',
+  		'meta' => true
   	), $atts));
 
-    return mp_list_products(false, $paginate, $page, $per_page, $order_by, $order, $category, $tag);
+    return mp_product(false, $product_id, $title, $content, $image, $meta);
+  }
+	
+	/**
+		* Displays the product featured image
+		*
+		* @param string $context Options are list, single, or widget
+		* @param int $product_id The post_id for the product. Optional if in the loop
+		* @param int $size An optional width/height for the image if contect is widget
+   */
+  function mp_product_image_sc($atts) {
+    extract(shortcode_atts(array(
+  		'context' => 'single',
+			'product_id' => NULL,
+			'size' => NULL
+  	), $atts));
+
+    return mp_product_image(false, $context, $product_id, $size);
+  }
+	
+	/*
+	 * Displays the buy or add to cart button
+	 *
+	 * @param string $context Options are list or single
+	 * @param int $post_id The post_id for the product. Optional if in the loop
+	 */
+  function mp_buy_button_sc($atts) {
+    extract(shortcode_atts(array(
+  		'context' => 'single',
+			'product_id' => NULL
+  	), $atts));
+
+    return mp_buy_button(false, $context, $product_id);
   }
 
+	/*
+	 * Displays the product price (and sale price)
+	 *
+	 * @param int $product_id The post_id for the product. Optional if in the loop
+	 * @param sting $label A label to prepend to the price. Defaults to "Price: "
+	 */
+  function mp_product_price_sc($atts) {
+    extract(shortcode_atts(array(
+  		'label' => true,
+			'product_id' => NULL
+  	), $atts));
+
+    return mp_product_price(false, $product_id, $label);
+  }
+	
+	/*
+	 * Displays the product meta box
+	 *
+	 * @param string $context Options are list or single
+	 * @param int $product_id The post_id for the product. Optional if in the loop
+	 * @param sting $label A label to prepend to the price. Defaults to "Price: "
+	 */
+  function mp_product_meta_sc($atts) {
+    extract(shortcode_atts(array(
+			'context' => 'single',
+  		'label' => true,
+			'product_id' => NULL
+  	), $atts));
+		
+		$content = '<div class="mp_product_meta">';
+		$content .= mp_product_price(false, $product_id, $label);
+		$content .= mp_buy_button(false, $context, $product_id);
+		$content .= '</div>';
+    return $content;
+  }
+	
+	/*
+	 * Displays the product SKU
+	 *
+	 * @param int $product_id The post_id for the product. Optional if in the loop
+	 * @param string $seperator The seperator to put between skus, default ', '
+	 */
+  function mp_product_sku_sc($atts) {
+    extract(shortcode_atts(array(
+  		'seperator' => false,
+			'product_id' => NULL
+  	), $atts));
+		
+		return mp_product_sku( false, $product_id, $seperator );
+  }
+	
   /**
    * Returns the current shopping cart link.
    * @param bool url Optional, whether to return a link or url. Defaults to show link.
@@ -226,5 +342,3 @@ class MarketPress_Shortcodes {
 
 }
 $mp_shortcodes = new MarketPress_Shortcodes();
-
-?>

@@ -58,7 +58,7 @@ class MarketPress_MS {
     <div class="wrap">
     <div class="icon32"><img src="<?php echo $mp->plugin_url . 'images/settings.png'; ?>" /></div>
     <h2><?php _e('MarketPress Network Options', 'mp') ?></h2>
-    <div class="error"><p><a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to MarketPress Pro to enable Multisite features &raquo;', 'mp'); ?></a></p></div>
+    <div class="error"><p><a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to MarketPress Pro to enable Multisite features &raquo;', 'mp'); ?></a></p></div>
 
 		<div id="poststuff" class="metabox-holder mp-settings">
       <form id="mp-main-form" method="post" action="">
