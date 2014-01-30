@@ -24,7 +24,7 @@ And, did you know that MarketPress is also 100% WordPress Multisite and BuddyPre
 So, what are you waiting for, download MarketPress today and give it a crack.
 
 We guarantee you'll enjoy it right out of the box... although we provide comprehensive documentation and support if you need it :)
-[youtube http://www.youtube.com/watch?v=Wa8fUFKwl-k&hd=1]
+[youtube http://www.youtube.com/watch?v=4QX1P7e-9dw&hd=1]
 
 Or, read on to find out more about what you can get from MarketPress...
 
