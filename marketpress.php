@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.9.0.3
-Plugin URI: http://premium.wpmudev.org/project/e-commerce/
+Version: 2.9.2.1
+Plugin URI: https://premium.wpmudev.org/project/e-commerce/
 Description: The complete WordPress ecommerce plugin - works perfectly with BuddyPress and Multisite too to create a social marketplace, where you can take a percentage! Activate the plugin, adjust your settings then add some products to your store.
 Author: WPMU DEV
 Author URI: http://premium.wpmudev.org/
@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA	 02111-1307	 USA
 
 class MarketPress {
 
-	var $version = '2.9.0.3';
+	var $version = '2.9.2.1';
 	var $location;
 	var $plugin_dir = '';
 	var $plugin_url = '';
@@ -75,6 +75,9 @@ class MarketPress {
 	function __construct() {
 	 //setup our variables
 	 $this->init_vars();
+	 
+	 //initialize session
+	 $this->start_session();
 
 	 //install plugin
 	 register_activation_hook( __FILE__, array($this, 'install') );
@@ -156,6 +159,10 @@ class MarketPress {
 			add_filter( 'wp_list_pages', array(&$this, 'filter_list_pages'), 10, 2 );
 			add_filter( 'wp_nav_menu_objects', array(&$this, 'filter_nav_menu'), 10, 2 );
 		}
+		
+		/* enqueue lightbox - this will just register the styles/scripts
+			 the won't actually be output unless they're needed */
+		add_action('wp_enqueue_scripts', array(&$this, 'enqueue_lightbox'));
 
 		//Payment gateway returns
 		add_action( 'pre_get_posts', array(&$this, 'handle_gateway_returns'), 1 );
@@ -333,6 +340,8 @@ Thanks again!", 'mp')
 		 'simple_list' => 0,
 		 'show_limit' => 3
 		),
+		'image_alignment_single' => 'alignleft',
+		'image_alignment_list' => 'alignleft',
 	 );
 
 	 //filter default settings
@@ -395,11 +404,15 @@ Thanks again!", 'mp')
 		// Place it in this plugin's "languages" folder and name it "mp-[value in wp-config].mo"
 		$mu_plugins = wp_get_mu_plugins();
 		$lang_dir = dirname(plugin_basename($this->plugin_file)) . '/marketpress-includes/languages/';
+		$custom_path = WP_LANG_DIR . '/marketpress/mp-' . get_locale() . '.mo';
 		
-		if ( in_array($this->plugin_file, $mu_plugins) )
+		if ( file_exists($custom_path) ) {
+			load_textdomain('mp', $custom_path);
+		} elseif ( in_array($this->plugin_file, $mu_plugins) ) {
 			load_muplugin_textdomain('mp', $lang_dir);
-		else
+		} else {
 			load_plugin_textdomain('mp', false, $lang_dir);
+		}
 
 		//setup language code for jquery datepicker translation
 		$temp_locales = explode('_', get_locale());
@@ -617,20 +630,22 @@ Thanks again!", 'mp')
 
 	function add_menu_items() {
 	 //only process the manage orders page for editors and above and if orders hasn't been disabled
-	 if (current_user_can('edit_others_posts') && !$this->get_setting('disable_cart')) {
+	 $order_cap = apply_filters('mp_orders_cap', 'edit_others_posts');
+	 
+	 if (current_user_can($order_cap) && !$this->get_setting('disable_cart')) {
 		$num_posts = wp_count_posts('mp_order'); //get pending order count
 		$count = $num_posts->order_received + $num_posts->order_paid;
 		if ( $count > 0 )
 				$count_output = '&nbsp;<span class="update-plugins"><span class="updates-count count-' . $count . '">' . $count . '</span></span>';
 			else
 				$count_output = '';
-		$orders_page = add_submenu_page('edit.php?post_type=product', __('Manage Orders', 'mp'), __('Manage Orders', 'mp') . $count_output, 'edit_others_posts', 'marketpress-orders', array(&$this, 'orders_page'));
+		$orders_page = add_submenu_page('edit.php?post_type=product', __('Manage Orders', 'mp'), __('Manage Orders', 'mp') . $count_output, $order_cap, 'marketpress-orders', array(&$this, 'orders_page'));
 	 }
-
+	
 	 $page = add_submenu_page('edit.php?post_type=product', __('Store Settings', 'mp'), __('Store Settings', 'mp'), 'manage_options', 'marketpress', array(&$this, 'admin_page'));
 	 add_action( 'admin_print_scripts-' . $page, array(&$this, 'admin_script_settings') );
 	 add_action( 'admin_print_styles-' . $page, array(&$this, 'admin_css_settings') );
-
+	
 		if ( !defined('WPMUDEV_REMOVE_BRANDING') ) {
 			add_action( "load-{$page}", array( &$this, 'add_help_tab' ) );
 		}
@@ -640,7 +655,7 @@ Thanks again!", 'mp')
 		get_current_screen()->add_help_tab( array(
 			'id' => 'marketpress-help',
 			'title' => __('MarketPress Instructions', 'mp'),
-			'content' => '<iframe src="http://premium.wpmudev.org/wdp-un.php?action=help&id=144" width="100%" height="600px"></iframe>'
+			'content' => '<iframe src="//premium.wpmudev.org/wdp-un.php?action=help&id=144" width="100%" height="600px"></iframe>'
 		) );
 	}
 
@@ -723,14 +738,14 @@ Thanks again!", 'mp')
 	 if ( !$this->get_setting('show_lightbox') )
 		return;
 
-	 wp_enqueue_style( 'jquery-lightbox', $this->plugin_url . 'lightbox/style/lumebox.css', false, $this->version );
-	 wp_enqueue_script( 'jquery-lightbox', $this->plugin_url . 'lightbox/js/jquery.lumebox.min.js', array('jquery'), $this->version, true );
+	 wp_enqueue_style('mp-lightbox', $this->plugin_url . 'lightbox/style/lumebox.css', false, $this->version);	//we enqueue styles on every page just in case of shortcodes http://wp.mu/8ou
+	 wp_register_script('mp-lightbox', $this->plugin_url . 'lightbox/js/jquery.lumebox.min.js', array('jquery'), $this->version, true);	//we just register the script here - we can output selectively later
 
 	 // declare the variables we need to access in js
 	 $js_vars = array( 'graphicsDir' => $this->plugin_url . 'lightbox/style/' );
-	 wp_localize_script( 'jquery-lightbox', 'lumeboxOptions', $js_vars );
+	 wp_localize_script('mp-lightbox', 'lumeboxOptions', $js_vars);
 	}
-
+	
 	//if cart widget is not in a sidebar, add it to the top of the first sidebar. Only runs at initial install
 	function add_default_widget() {
 	 if (!is_active_widget(false, false, 'mp_cart_widget')) {
@@ -839,7 +854,7 @@ Thanks again!", 'mp')
 				'publicly_queryable' => true,
 				'capability_type' => 'page',
 				'hierarchical' => false,
-				'menu_icon' => $icon,
+				'menu_icon' => $icon, 
 				'rewrite' => array(
 					'slug' => $this->get_setting('slugs->store') . '/' . $this->get_setting('slugs->products'),
 					'with_front' => false
@@ -979,15 +994,18 @@ Thanks again!", 'mp')
 		return $vars;
 	}
 
+	/**
+	 * Securely starts our session for handling cart info, etc
+	 */
 	function start_session() {
-	 //start the sessions for cart handling
-	 if (session_id() == "")
-		session_start();
+		$sess_id = session_id();
+		
+		if ( empty($sess_id) ) {
+			session_start();
+		}
 	}
 
 	function logout_clear_session() {
-		$this->start_session();
-
 		//clear personal info
 		unset($_SESSION['mp_shipping_info']);
 		unset($_SESSION['mp_billing_info']);
@@ -1042,10 +1060,7 @@ Thanks again!", 'mp')
 		}
 
 		$this->is_shop_page = true;
-
-		//enqueue lightbox on single product page
-		$this->enqueue_lightbox();
-
+		wp_enqueue_script('mp-lightbox');
 	 }
 
 	 //load proper theme for main store page
@@ -1068,10 +1083,6 @@ Thanks again!", 'mp')
 
 	 //load proper theme for checkout page
 	 if ($wp_query->query_vars['pagename'] == 'cart') {
-
-		//init session for store pages
-		$this->start_session();
-
 		//process cart updates
 		$this->update_cart();
 
@@ -1658,7 +1669,7 @@ Thanks again!", 'mp')
 
 	$msgs = $this->get_setting('msg');
 	 $content .= do_shortcode($msgs['product_list']);
-	 $content .= mp_list_products(array('echo' => false, 'filters' => true));
+	 $content .= mp_list_products(array('echo' => false));
 
 	 return $content;
 	}
@@ -1671,7 +1682,7 @@ Thanks again!", 'mp')
 
 		$msgs = $this->get_setting('msg');
 	 $content = do_shortcode($msgs['product_list']);
-	 $content .= mp_list_products(array('echo' => false, 'filters' => true));
+	 $content .= mp_list_products(array('echo' => false));
 
 	 return $content;
 	}
@@ -3987,7 +3998,6 @@ Thanks again!", 'mp')
 
 	function user_profile_fields() {
 	 global $current_user;
-		$this->start_session();
 		$fields = array( 'email', 'name', 'address1', 'address2', 'city', 'state', 'zip', 'country', 'phone' );
 		
 	 if (isset($_REQUEST['user_id'])) {
@@ -5302,7 +5312,7 @@ Notification Preferences: %s', 'mp');
 			<div class="icon32"><img src="<?php echo $this->plugin_url . 'images/download.png'; ?>" /></div>
 			<h2><?php _e('Export Orders', 'mp'); ?></h2>
 			<?php if ( defined( 'MP_LITE' ) ) { ?>
-			<a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable CSV order exports &raquo;', 'mp'); ?></a><br />
+			<a class="mp-pro-update" href="https://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable CSV order exports &raquo;', 'mp'); ?></a><br />
 			<?php } ?>
 			<form action="<?php echo admin_url('admin-ajax.php?action=mp-orders-export'); ?>" method="post">
 				<?php
@@ -5762,7 +5772,7 @@ Notification Preferences: %s', 'mp');
 							<th scope="row"><?php _e('Google Analytics Ecommerce Tracking', 'mp') ?></th>
 					 <td>
 						<?php if ( defined( 'MP_LITE' ) ) { ?>
-						<a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable Google Analytics Ecommerce Tracking &raquo;', 'mp'); ?></a><br />
+						<a class="mp-pro-update" href="https://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable Google Analytics Ecommerce Tracking &raquo;', 'mp'); ?></a><br />
 						<?php } ?>
 						<select name="mp[ga_ecommerce]"<?php echo defined( 'MP_LITE' ) ? ' disabled="disabled"' : ''; ?>>
 								<option value="none"<?php selected($this->get_setting('ga_ecommerce'), 'none') ?>><?php _e('None', 'mp') ?></option>
@@ -6309,17 +6319,17 @@ Notification Preferences: %s', 'mp');
 					 <th scope="row"><?php _e('Store Style', 'mp') ?></th>
 						<td>
 						<?php if ( defined( 'MP_LITE' ) ) { ?>
-						<a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable all styles &raquo;', 'mp'); ?></a><br />
+						<a class="mp-pro-update" href="https://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable all styles &raquo;', 'mp'); ?></a><br />
 						<?php } ?>
 						<?php $this->store_themes_select(); ?>
 						<br /><span class="description"><?php _e('This option changes the built-in css styles for store pages.', 'mp') ?></span>
 						<?php if ((is_multisite() && is_super_admin()) || !is_multisite()) { ?>
 						<br /><span class="description"><?php printf(__('For a custom css style, save your css file with the "MarketPress Style: NAME" header in the "%s/marketpress-styles/" folder and it will appear in this list so you may select it. You can also select "None" and create custom theme templates and css to make your own completely unique store design. More information on that <a href="%sthemes/Themeing_MarketPress.txt">here &raquo;</a>', 'mp'), WP_CONTENT_DIR, $this->plugin_url); ?></span>
 						<h4><?php _e('Full-featured MarketPress Themes:', 'mp') ?></h4>
-						<div class="mp-theme-preview"><a title="<?php _e('Download Now &raquo;', 'mp') ?>" href="http://premium.wpmudev.org/project/frame-market-theme/"><img alt="FrameMarket Theme" src="http://premium.wpmudev.org/wp-content/projects/219/listing-image-thumb.png" />
+						<div class="mp-theme-preview"><a title="<?php _e('Download Now &raquo;', 'mp') ?>" href="https://premium.wpmudev.org/project/frame-market-theme/"><img alt="FrameMarket Theme" src="//premium.wpmudev.org/wp-content/projects/219/listing-image-thumb.png" />
 							<strong><?php _e('FrameMarket/GridMarket', 'mp') ?></strong></a><br />
 							<?php _e('The ultimate MarkePress theme brings visual perfection to WordPress e-commerce. This professional front-end does all the work for you!', 'mp') ?></div>
-						<div class="mp-theme-preview"><a title="<?php _e('Download Now &raquo;', 'mp') ?>" href="http://premium.wpmudev.org/project/simplemarket/"><img alt="SimpleMarket Theme" src="http://premium.wpmudev.org/wp-content/projects/237/listing-image-thumb.png" />
+						<div class="mp-theme-preview"><a title="<?php _e('Download Now &raquo;', 'mp') ?>" href="https://premium.wpmudev.org/project/simplemarket/"><img alt="SimpleMarket Theme" src="//premium.wpmudev.org/wp-content/projects/237/listing-image-thumb.png" />
 							<strong><?php _e('SimpleMarket', 'mp') ?></strong></a><br />
 							<?php _e('The SimpleMarket Theme uses an HTML 5 responsive design so your e-commerce site looks great across all screen-sizes and devices such as smartphones or tablets!', 'mp') ?></div>
 						<?php } ?>
@@ -6372,6 +6382,22 @@ Notification Preferences: %s', 'mp');
 						<label><?php _e('Height', 'mp') ?><input size="3" name="mp[product_img_height]" value="<?php echo esc_attr($this->get_setting('product_img_height')) ?>" type="text" /></label>&nbsp;
 						<label><?php _e('Width', 'mp') ?><input size="3" name="mp[product_img_width]" value="<?php echo esc_attr($this->get_setting('product_img_width')) ?>" type="text" /></label>
 					 </td>
+					 </tr>
+					 <tr>
+					 		<th scope="row"><?php _e('Product Image Alignment', 'mp'); ?></th>
+					 		<td>
+					 			<?php
+					 			$alignments = array(
+					 				'alignnone' => __('None', 'mp'),
+					 				'aligncenter' => __('Center', 'mp'),
+					 				'alignleft' => __('Left', 'mp'),
+					 				'alignright' => __('Right', 'mp'),
+					 			);
+					 			foreach ( $alignments as $value => $label ) :
+					 				$input_id = 'mp-image-align-single' . $value; ?>
+					 			<label for="<?php echo $input_id; ?>"><input value="<?php echo $value; ?>" type="radio" name="mp[image_alignment_single]" id="<?php echo $input_id; ?>" <?php checked($this->get_setting('image_alignment_single'), $value); ?> /> <?php echo $label; ?></label><?php
+					 			endforeach; ?>
+					 		</td>
 					 </tr>
 					 <tr>
 							<th scope="row"><?php _e('Show Image Lightbox', 'mp') ?></th>
@@ -6466,6 +6492,22 @@ Notification Preferences: %s', 'mp');
 						<label><?php _e('Height', 'mp') ?><input size="3" name="mp[list_img_height]" value="<?php echo esc_attr($this->get_setting('list_img_height')) ?>" type="text" /></label>&nbsp;
 						<label><?php _e('Width', 'mp') ?><input size="3" name="mp[list_img_width]" value="<?php echo esc_attr($this->get_setting('list_img_width')) ?>" type="text" /></label>
 					 </td>
+					 <tr>
+					 		<th scope="row"><?php _e('Product Thumbnail Alignment', 'mp'); ?></th>
+					 		<td>
+					 			<?php
+					 			$alignments = array(
+					 				'alignnone' => __('None', 'mp'),
+					 				'aligncenter' => __('Center', 'mp'),
+					 				'alignleft' => __('Left', 'mp'),
+					 				'alignright' => __('Right', 'mp'),
+					 			);
+					 			foreach ( $alignments as $value => $label ) :
+					 				$input_id = 'mp-image-align-list' . $value; ?>
+					 			<label for="<?php echo $input_id; ?>"><input value="<?php echo $value; ?>" type="radio" name="mp[image_alignment_list]" id="<?php echo $input_id; ?>" <?php checked($this->get_setting('image_alignment_list'), $value); ?> /> <?php echo $label; ?></label><?php
+					 			endforeach; ?>
+					 		</td>
+					 </tr>					 
 					 </tr>
 								<tr>
 									<th scope="row"><?php _e('Show Excerpts', 'mp') ?></th>
@@ -6499,7 +6541,7 @@ Notification Preferences: %s', 'mp');
 					</td>
 					 </tr>
 					 <tr>
-						<td scope="row"><?php _e('Show Product Filters', 'mp') ?></td>
+						<th scope="row"><?php _e('Show Product Filters', 'mp') ?></th>
 						<td> 
 							<label><input value="1" name="mp[show_filters]" type="radio"<?php checked($this->get_setting('show_filters'), 1) ?> /> <?php _e('Yes', 'mp') ?></label>
 							<label><input value="0" name="mp[show_filters]" type="radio"<?php checked($this->get_setting('show_filters'), 0) ?> /> <?php _e('No', 'mp') ?></label>
@@ -6827,7 +6869,7 @@ Notification Preferences: %s', 'mp');
 								<th scope="row"><?php _e('Select Shipping Options', 'mp') ?></th>
 								<td>
 									<?php if ( defined( 'MP_LITE' ) ) { ?>
-									<a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable Calculated Shipping options &raquo;', 'mp'); ?></a><br />
+									<a class="mp-pro-update" href="https://premium.wpmudev.org/project/e-commerce/" title="<?php _e('Upgrade Now', 'mp'); ?> &raquo;"><?php _e('Upgrade to enable Calculated Shipping options &raquo;', 'mp'); ?></a><br />
 									<?php } ?>
 									<span class="description"><?php _e('Select which calculated shipping methods the customer will be able to choose from:', 'mp') ?></span><br />
 									<?php
@@ -6920,7 +6962,7 @@ Notification Preferences: %s', 'mp');
 
 					 foreach ((array)$mp_gateway_plugins as $code => $plugin) {
 						if ($plugin[3]) { //if demo
-							?><label><input type="checkbox" class="mp_allowed_gateways" name="mp[gateways][allowed][]" value="<?php echo $code; ?>" disabled="disabled" /> <?php echo esc_attr($plugin[1]); ?></label> <a class="mp-pro-update" href="http://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade', 'mp'); ?> &raquo;"><?php _e('Pro Only &raquo;', 'mp'); ?></a><br /><?php
+							?><label><input type="checkbox" class="mp_allowed_gateways" name="mp[gateways][allowed][]" value="<?php echo $code; ?>" disabled="disabled" /> <?php echo esc_attr($plugin[1]); ?></label> <a class="mp-pro-update" href="https://premium.wpmudev.org/project/e-commerce" title="<?php _e('Upgrade', 'mp'); ?> &raquo;"><?php _e('Pro Only &raquo;', 'mp'); ?></a><br /><?php
 									} else {
 							?><label><input type="checkbox" class="mp_allowed_gateways" name="mp[gateways][allowed][]" value="<?php echo $code; ?>"<?php echo (in_array($code, $this->get_setting('gateways->allowed', array()))) ? ' checked="checked"' : ''; ?> /> <?php echo esc_attr($plugin[1]); ?></label><br /><?php
 									}
@@ -6958,7 +7000,7 @@ Notification Preferences: %s', 'mp');
 			 <div class="postbox">
 				<h3 class='hndle'><span><?php _e('General Information', 'mp') ?></span></h3>
 				<div class="inside">
-					<iframe src="http://premium.wpmudev.org/wdp-un.php?action=help&id=144" width="100%" height="400px"></iframe>
+					<iframe src="//premium.wpmudev.org/wdp-un.php?action=help&id=144" width="100%" height="400px"></iframe>
 				</div>
 			 </div>
 			 -->
@@ -7038,6 +7080,7 @@ Notification Preferences: %s', 'mp');
 							<li><?php _e('"tag" - Limits list to a specific product tag. Use the tag Slug', 'mp') ?></li>
 							<li><?php _e('"list_view" - 1 for list view, 0 (default) for grid view', 'mp') ?></li>
 							<li><?php _e('Example:', 'mp') ?> <em>[mp_list_products paginate="true" page="1" per_page="10" order_by="price" order="DESC" category="downloads"]</em></li>
+							<li><?php _e('"filters" - 1 to show product filters, 0 to not show filters', 'mp') ?></li>							
 						</ul></p>
 					 </td>
 					 </tr>
@@ -7069,7 +7112,8 @@ Notification Preferences: %s', 'mp');
 							<li><?php _e('"product_id" - The ID for the product.	This is the Post ID, you can find it in the url of a product edit page. Optional if shortcode is in the loop.', 'mp') ?></li>
 										<li><?php _e('"context" - What context for preset size options. Options are list, single, or widget, default single.', 'mp') ?></li>
 										<li><?php _e('"size" - Set a custom pixel width/height. If omitted defaults to the size set by "context".', 'mp') ?></li>
-							<li><?php _e('Example:', 'mp') ?> <em>[mp_product_image product_id="1" size="150"]</em></li>
+										<li><?php _e('"align" - Set the alignment of the image. If omitted defaults to the alignment set in presentation settings.', 'mp') ?></li>
+							<li><?php _e('Example:', 'mp') ?> <em>[mp_product_image product_id="1" size="150" align="left"]</em></li>
 						</ul></p>
 					 </td>
 					 </tr>
@@ -7209,7 +7253,7 @@ Notification Preferences: %s', 'mp');
 		
 		foreach ( $defaults as $key => $value ) {
 			$val = array_shift($args);
-			$tmp_args[$key] = is_null($val) ? $val : $value;
+			$tmp_args[$key] = !is_null($val) ? $val : $value;
 		}
 		
 		return $tmp_args;

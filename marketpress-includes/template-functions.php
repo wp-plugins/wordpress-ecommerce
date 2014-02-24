@@ -1112,7 +1112,7 @@ function mp_order_status( $echo = true ) {
 		if (!empty($order_id)) {
 				//get order
 				$order = $mp->get_order($order_id);
-
+				
 				if ($order) { //valid order
 						$content .= '
 							<h2><em>' . sprintf(__('Order Details (%s):', 'mp'), esc_html($order_id)) . '</em></h2>
@@ -1538,6 +1538,7 @@ function mp_list_products() {
 	global $wp_query, $mp;
 	
 	$args = $mp->parse_args(func_get_args(), $mp->defaults['list_products']);
+	$args['nopaging'] = false;
 	
 	$query = array(
 		'post_type' => 'product',
@@ -1583,7 +1584,7 @@ function mp_list_products() {
 	
 	//setup pagination
 	if ( (!is_null($args['paginate']) && !$args['paginate']) || (is_null($args['paginate']) && !$mp->get_setting('paginate')) ) {
-		$query['nopaging'] = true;
+		$query['nopaging'] = $args['nopaging'] = true;
 	} else {
 		//figure out perpage
 		if ( !is_null($args['per_page']) ) {
@@ -1593,10 +1594,10 @@ function mp_list_products() {
 		}
 		
 		//figure out page
-		if ( !is_null($args['paged']) ) {
+		if ( !is_null($args['page']) ) {
 			$query['paged'] = intval($args['page']);
 		} elseif ( $wp_query->get('paged') != '' ) {
-			$query['paged'] = intval($wp_query->get('paged'));
+			$query['paged'] = $args['page'] = intval($wp_query->get('paged'));
 		}
 
 		//get order by
@@ -1640,7 +1641,14 @@ function mp_list_products() {
 		$layout_type = $args['list_view'] ? 'list' : 'grid';
 	}
 	
-	$content = ( (is_null($args['filters']) && 1 == $mp->get_setting('show_filters')) || $args['filters'] ) ? mp_products_filter() : '';
+	$content = '';
+	
+	if ( defined('DOING_AJAX') && DOING_AJAX ) {
+		//do nothing
+	} else {
+		$content .= ( (is_null($args['filters']) && 1 == $mp->get_setting('show_filters')) || $args['filters'] ) ? mp_products_filter() : mp_products_filter(true);
+	}
+	
 	$content .= '<div id="mp_product_list" class="mp_' . $layout_type . '">';
 
 	if ( $last = $custom_query->post_count ) {
@@ -1650,7 +1658,7 @@ function mp_list_products() {
 	}
 
 	$content .= '</div>';
-	$content .= ($args['paged']) ? mp_products_nav(false, $custom_query) : '';
+	$content .= ( ! $args['nopaging'] ) ? mp_products_nav(false, $custom_query) : '';
 	
 	$content = apply_filters('mp_list_products', $content, $args);
 
@@ -1917,6 +1925,11 @@ if (!function_exists('mp_product')) :
 
 function mp_product($echo = true, $product_id, $title = true, $content = 'full', $image = 'single', $meta = true) {
 		global $mp;
+		
+		if ( function_exists('icl_object_id') ) {
+			$product_id = icl_object_id($product_id, 'product', false);	
+		}
+		
 		$post = get_post($product_id);
 
 		$return = '<div itemscope itemtype="http://schema.org/Product" ' . mp_product_class(false, 'mp_product', $post->ID) . '>';
@@ -2302,9 +2315,10 @@ if (!function_exists('mp_product_image')) :
  * @param string $context Options are list, single, or widget
  * @param int $post_id The post_id for the product. Optional if in the loop
  * @param int $size An optional width/height for the image if contect is widget
+ * @param string $align The alignment of the image. Defaults to settings.
  */
 
-function mp_product_image($echo = true, $context = 'list', $post_id = NULL, $size = NULL) {
+function mp_product_image($echo = true, $context = 'list', $post_id = NULL, $size = NULL, $align = NULL) {
 		global $id, $mp;
 		$post_id = ( NULL === $post_id ) ? $id : $post_id;
 		// Added WPML
@@ -2314,6 +2328,10 @@ function mp_product_image($echo = true, $context = 'list', $post_id = NULL, $siz
 
 		$post_thumbnail_id = get_post_thumbnail_id($post_id);
 		$class = $title = $link = '';
+		$img_classes = array('mp_product_image_' . $context);
+		
+		if ( !is_null($align) )
+			$align = 'align' . $align;
 
 		if ($context == 'list') {
 				//quit if no thumbnails on listings
@@ -2335,6 +2353,7 @@ function mp_product_image($echo = true, $context = 'list', $post_id = NULL, $siz
 
 				$title = esc_attr($post->post_title);
 				$class = ' class="mp_img_link"';
+				$img_classes[] = is_null($align) ? $mp->get_setting('image_alignment_list') : $align;
 		} else if ($context == 'single') {
 				//size
 				if ($mp->get_setting('product_img_size') == 'custom')
@@ -2354,9 +2373,13 @@ function mp_product_image($echo = true, $context = 'list', $post_id = NULL, $siz
 				}
 
 				$class = ' class="mp_product_image_link mp_lightbox"';
+				$img_classes[] = is_null($align) ? $mp->get_setting('image_alignment_single') : $align;
+				
 				//in case another plugin is loadin glightbox
-				if ($mp->get_setting('show_lightbox'))
-						$class .= ' rel="lightbox"';
+				if ($mp->get_setting('show_lightbox')) {
+					$class .= ' rel="lightbox"';
+					wp_enqueue_script('mp-lightbox');
+				}
 		} else if ($context == 'widget') {
 				//size
 				if (intval($size))
@@ -2371,25 +2394,32 @@ function mp_product_image($echo = true, $context = 'list', $post_id = NULL, $siz
 				$class = ' class="mp_img_link"';
 		}
 
-		$image = get_the_post_thumbnail($post_id, $size, array('itemprop' => 'image', 'class' => 'alignleft mp_product_image_' . $context, 'title' => $title));
+		$image = get_the_post_thumbnail($post_id, $size, array('itemprop' => 'image', 'class' => implode(' ', $img_classes), 'title' => $title));
 
 		if (empty($image) && $context != 'single') {
 				if (!is_array($size)) {
 						$size = array(get_option($size . "_size_w"), get_option($size . "_size_h"));
 				}
-				$image = '<img width="' . $size[0] . '" height="' . $size[1] . '" itemprop="image" title="' . esc_attr($title) . '" class="alignleft mp_product_image_' . $context . ' wp-post-image" src="' . apply_filters('mp_default_product_img', $mp->plugin_url . 'images/default-product.png') . '">';
+				$img_classes[] = 'wp-post-image';
+				$image = '<img width="' . $size[0] . '" height="' . $size[1] . '" itemprop="image" title="' . esc_attr($title) . '" class="' . implode(' ', $img_classes) . '" src="' . apply_filters('mp_default_product_img', $mp->plugin_url . 'images/default-product.png') . '">';
+		}
+		
+		//force ssl on images (if applicable) http://wp.mu/8s7
+		if ( is_ssl() ) {
+			$image = str_replace('http://', 'https://', $image);
 		}
 
 		//add the link
-		if ($link)
-				$image = '<a id="product_image-' . $post_id . '"' . $class . ' href="' . $link . '">' . $image . '</a>';
+		if ($link) {
+			$image = '<a id="product_image-' . $post_id . '"' . $class . ' href="' . $link . '">' . $image . '</a>';
+		}
 
 		$image = apply_filters('mp_product_image', $image, $context, $post_id, $size);
 
 		if ($echo)
-				echo $image;
+			echo $image;
 		else
-				return $image;
+			return $image;
 }
 endif;
 
@@ -2400,7 +2430,7 @@ if (!function_exists('mp_products_filter')) :
  * 
  * @return string		html for filter/order products select elements.
  */
-function mp_products_filter() {
+function mp_products_filter( $hidden = false ) {
 		global $wp_query, $mp;
 
 		if ( 'product_category' == get_query_var('taxonomy') ) {
@@ -2442,7 +2472,7 @@ function mp_products_filter() {
 		}
 
 		$return = '
-			<div class="mp_list_filter">
+			<div class="mp_list_filter"' . (( $hidden ) ? ' style="display:none"' : '') . '>
 				<form name="mp_product_list_refine" class="mp_product_list_refine" method="get">
 						<div class="one_filter">
 							<span>' . __('Category', 'mp') . '</span>

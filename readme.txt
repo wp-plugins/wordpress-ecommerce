@@ -126,6 +126,34 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 
 == Changelog ==
 
+= 2.9.2.1 =
+- Fixed: Simplify gateway would cause errors when enabled with other gateways http://wp.mu/8w1
+- Added: "mp_orders_cap" filter which allows developers to easily change the capability type required to view the orders menu
+- Fixed: Divide by zero warning in USPS gateway
+- Fixed: Mixed-content warnings in wp-admin
+- Fixed: Session handling code that caused issues with PayPal Express checkout 
+- Fixed: Conflict with WordPress Social Invitations plugin http://wp.mu/8ul
+- Fixed: When using WPML and [mp_product] shortcode the non-translated version of the product would be returned
+- Fixed: GA E-Commerce bug http://wp.mu/8ve
+- Fixed mixed-content issues on checkout pages when using SSL
+- Fixed when importing products from csv, products with stock set to 0 wouldn't be tracked http://wp.mu/8sp
+- Removed outdated translation files
+- Added support for all Stripe payment gateway currencies http://wp.mu/8sw
+- Updated session handling code - fixes some PHP warnings that some users were reporting
+- Fixed some bugs in WePay gateway
+- Localization files (.mo) can now be loaded from wp-content/language/marketpress/mp-{your locale}.mo
+- Fixed issue (fatal error) when calculating total price with taxes in 2checkout payment gateway
+- Fixed a bug where product pagination sometimes wouldn't display
+- Fixed a bug in [mp_list_products] where products would always show above all other content
+- Updated some default styles for cart widget
+- Update .pot file
+- Added presentation settings for choosing alignment of product image instead of always "alignleft"
+- Updated mp_product_image function/shortcode to allow for setting product image alignment
+- Fixed a bug where product filters would show even if turned off in presentation settings
+- Fixed a Genesis theme compatibility update for >2.0
+- Fixed a bug where no lightbox would show when using the [mp_product_image context="single"] shortcode with lightbox enabled in presentation settings http://wp.mu/8ov
+- Added new payment gateway - WePay (beta)
+
 = 2.9.0.3 =
 * Fix: Genesis theme compatibility update for >2.0
 * Use WP3.8 dashicon for admin menu

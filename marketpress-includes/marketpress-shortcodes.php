@@ -168,7 +168,10 @@ class MarketPress_Shortcodes {
    */
   function mp_list_products_sc($atts) {
   	global $mp;
+  	
     $args = shortcode_atts($mp->defaults['list_products'], $atts);
+    $args['echo'] = false;
+    
     return mp_list_products($args);
   }
 	
@@ -199,15 +202,17 @@ class MarketPress_Shortcodes {
 		* @param string $context Options are list, single, or widget
 		* @param int $product_id The post_id for the product. Optional if in the loop
 		* @param int $size An optional width/height for the image if contect is widget
-   */
+		* @param string $align An option alignment of the image
+	 */
   function mp_product_image_sc($atts) {
     extract(shortcode_atts(array(
   		'context' => 'single',
 			'product_id' => NULL,
-			'size' => NULL
+			'size' => NULL,
+			'align' => NULL,
   	), $atts));
 
-    return mp_product_image(false, $context, $product_id, $size);
+    return mp_product_image(false, $context, $product_id, $size, $align);
   }
 	
 	/*
