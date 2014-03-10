@@ -13,7 +13,7 @@ MarketPress sets the standard for WordPress eCommerce solutions, providing an el
 
 Why spend thousands of dollars on cowboy-coded extensions and add-ons? There's no need to purchase extra add-ons or special licenses when MarketPress brings together the power of dozens of different plugins in one solid standalone product.
 
-http://youtu.be/3RTf6YSZS08
+[youtube http://www.youtube.com/watch?v=4QX1P7e-9dw&hd=1]
 
 = Features = 
 
