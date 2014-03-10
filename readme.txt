@@ -5,68 +5,79 @@ Requires at least: 3.3
 Tested up to: 3.8.1
 Stable tag: trunk
 
-The best free ecommerce plugin available for WordPress - easy to use, beautiful & powerful.
+MarketPress is the best free eCommerce plugin available for WordPress. Beautiful, powerful and easy to use.
 
 == Description ==
 
-MarketPress is the easiest to use, best designed and most powerful ecommerce / shopping cart plugin available for WordPress today.
+MarketPress sets the standard for WordPress eCommerce solutions, providing an elegant shopping experience that supports all major payment gateways and allows you to easily manage distribution and shopping costs with custom shipping options.
 
-Developed from the ground up to make it **simple** to set up a stylish online shop, MarketPress has all the features you need, including:
+Why spend thousands of dollars on cowboy-coded extensions and add-ons? There's no need to purchase extra add-ons or special licenses when MarketPress brings together the power of dozens of different plugins in one solid standalone product.
 
-* Multiple payment gateways (PayPal, Authorize.net, 2checkout, Moneybookers, eWay, iDeal, Payflow Pro, PayMill, PIN, Simplify, WePay, Stripe, Cubepoints and more)
-* Works great with any WordPress theme and looks great with AJAXy goodness
-* Fully internationalized by the WPML crew
-* Sell real objects, or digital downloads (with limits and tracking!), with ease
-* Shipping, coupons, Google Analytics Ecommerce tracking, sale pricing, unlimited product variations, and so so much more!
+http://youtu.be/3RTf6YSZS08
 
-And, did you know that MarketPress is also 100% WordPress Multisite and BuddyPress compatible - so **you can use it to start your own Etsy or Ebay style network of stores... where you take a % on each sale!!!**
+= Features = 
 
-So, what are you waiting for, download MarketPress today and give it a crack.
+Setting up your own online store couldn't be easier with MarketPress. Features include:
 
-We guarantee you'll enjoy it right out of the box... although we provide comprehensive documentation and support if you need it :)
-[youtube http://www.youtube.com/watch?v=4QX1P7e-9dw&hd=1]
-
-Or, read on to find out more about what you can get from MarketPress...
-
-= Sick of WP-ecommerce? =
-One of the main reasons we developed MarketPress was because, basically, so many of the existing WordPress ecommerce plugins out there offer a pretty awful user experience. WP-ecommerce being the most popular, we built a complete importer - allowing you to easily import your troublesome WP-ecommerce store into MarketPress... hurrah!
-
-= Want to make your product listings look amazing? =
-MarketPress is 100% customizable, but in case you don't want to get stuck into all that CSS, it comes with:
-
-* Amazing themes (that you can customize without knowing a single line of code)
-* Beautiful preset CSS styles
-* Powerful, yet elegant, widgets 
-* Hot product thumbnails/images with lightbox zooming
-
-And when it comes to the actual sales, we've got every feature you could ask for, including (but not limited to):
-
-* Payment gateways coming out of our ears
-* 100% ready for easy translation into any language
+* All the major payment gateways
 * Supports all major currencies
+* Fully internationalized by the WPML crew
+* Sell real objects or digital downloads
 * Ready to go for tax and VAT
-* Digital or physical objects
 * Multiple shipping options
-* Coupons, discounts and affiliate ready
-* Fully integrated with Google Analytics eCommerce
+* Coupons, discounts and affiliate-ready
+* Fully integrated with Google Universal Analytics eCommerce tracking
 * Unlimited product variations
+* Coupons and sales pricing
 * Stock tracking and alerts per variation
 * Per order product limits
 * AJAX cart and cart widget
-* Powerful shortcodes that you can use anywhere
-* Link any product to an external link (helooo Amazon affiliates!)
+* Powerful shortcodes you can use anywhere
+* Link any product to an external link
 * Categories and tags
 * Stock tracking and order management and alerts
 * Fully customizable urls
-* Checkout *without* having to be a site user
-* Start your own Etsy-like shopping network
-* Global shopping carts (for that network)
+* Checkout without having to be a site user
+* Looks great with any WordPress theme
 
-And that's really just the beginning, there's so much more, but the only way you'll get to find out about that is to try it...
+= Easily Customizeable = 
 
-We guarantee that it's simply the best - what else would you expect from WPMU DEV!
+There's no limit to how you can change the look and feel of MarketPress, but in case you don't want to get stuck into CSS, it comes with:
 
-<a href="http://premium.wpmudev.org/project/e-commerce/">Download the pro version</a>
+* Beautiful themes you can customize without touching code
+* Preset CSS styles
+* Powerful widgets
+* Product thumbnails/images with lightbox zooming
+
+= Powerful Widgets = 
+
+Use the Shopping Cart widget to dynamically display a cart's contents along with a checkout button. Thanks to AJAX, you can add an item and it shows in the cart instantly. You can also display product tag clouds, product categories and product lists with our handy widgets.
+
+= Solid Shortcodes =
+
+Designing and organising your online store has never been easier. With our powerful shortcodes you can create beautiful and complex layouts with ease, greatly Improving the functionality of your site without the added frustration of editing code.
+
+= Multisite and BuddyPress Compatible = 
+
+MarketPress is 100 per cent compatible with Multisite and BuddyPress. You could set up your own eBay or Etsy-style network of stores and take a percentage of each sale!
+
+= Comprehensive Documentation =
+
+We've designed MarketPress to provide a simple and beautiful user experience. But if you do get stuck, we've got all the documentation you need to understand the ins and outs of how it works.
+
+Our <a href="https://premium.wpmudev.org/project/e-commerce/#usage>
+in-depth step-by-step usage guide</a> includes handy screenshots. We've also got a fantastic <a href="https://premium.wpmudev.org/project/e-commerce/#usage>
+video guide</a> that walks you through the settings in MarketPress.
+
+= Want More? =
+
+<a href="http://premium.wpmudev.org/project/e-commerce/">Download the pro version</a> for:
+
+* Product personalization (i.e. assign a customer entered text field to a product)
+* Google Analytics eCommerce tracking
+* More than one built-in store style
+* Calculated shipping modules (UPS, USPS, Fedex, in-store pickup)
+* Full suite of payment methods (Lite version only displays PayPal Express, Simplify and manual payment gateways)
 
 == Installation ==
 = To Install: =
