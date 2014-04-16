@@ -1,8 +1,8 @@
 === MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV, uglyrobot
 Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
-Requires at least: 3.3
-Tested up to: 3.8.1
+Requires at least: 3.7
+Tested up to: 3.9
 Stable tag: trunk
 
 MarketPress is the best free eCommerce plugin available for WordPress. Beautiful, powerful and easy to use.
