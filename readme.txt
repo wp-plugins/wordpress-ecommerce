@@ -1,6 +1,6 @@
 === MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV, uglyrobot
-Tags: store, sell, ecommerce, shopping, marketplace, multisite, buddypress, wpmu
+Tags: store, sell, ecommerce, shopping, marketplace, digital downloads, downloads, e-downloads, sales, shop, stock, tax, WordPress commerce, checkout, cart, sell, inventory, shipping, multisite, buddypress
 Requires at least: 3.7
 Tested up to: 3.9
 Stable tag: trunk
