@@ -1,6 +1,6 @@
 === MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV, uglyrobot
-Tags: store, sell, ecommerce, shopping, marketplace, digital downloads, downloads, e-downloads, sales, shop, stock, tax, WordPress commerce, checkout, cart, sell, inventory, shipping, multisite, buddypress
+Tags:  buddypress, cart, checkout, digital downloads, downloads, e-downloads, ecommerce, inventory, marketplace, multisite, sales, sell, shipping, shop, shopping, stock, store, tax, VAT, WordPress commerce, 2Checkout, 2CO, Authorize.net, Authorize, AIM Checkout, Bitpay,  eWay Shared Payments, eWay Rapid 3.0 Payments, iDEAL, Manual Payments, Skrill, Moneybookers, PayPal Payflow Pro,  Paymill, PayPal Chained Payments, PayPal Express Checkout, PIN, Simplify Commerce by MasterCard, Stripe, WePay, UPS, USPS, FedEx, Pickup, Widgets, Variable,  physical, virtual, tangible, intangible, wp e-commerce
 Requires at least: 3.7
 Tested up to: 3.9
 Stable tag: trunk
