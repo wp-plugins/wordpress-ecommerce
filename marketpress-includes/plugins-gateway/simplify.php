@@ -253,7 +253,7 @@ class MP_Gateway_Simplify extends MP_Gateway_API {
 					<tr>
 						<th scope="row"><?php _e('Simplify API Credentials', 'mp') ?></th>
 						<td>
-							<span class="description"><?php _e('Login to Simplify to <a target="_blank" href="https://manage.simplify.com/#account/apikeys">get your API credentials</a>. Enter your test credentials, then live ones when ready.', 'mp') ?></span>
+							<span class="description"><?php _e('Login to Simplify to <a target="_blank" href="https://www.simplify.com/commerce/app#/account/apiKeys">get your API credentials</a>. Enter your test credentials, then live ones when ready.', 'mp') ?></span>
 							<p><label><?php _e('Private Key', 'mp') ?><br /><input value="<?php echo esc_attr($mp->get_setting('gateways->simplify->private_key')); ?>" size="70" name="mp[gateways][simplify][private_key]" type="text" /></label></p>
 							<p><label><?php _e('Public Key', 'mp') ?><br /><input value="<?php echo esc_attr($mp->get_setting('gateways->simplify->publishable_key')); ?>" size="70" name="mp[gateways][simplify][publishable_key]" type="text" /></label></p>
 						</td>
@@ -310,25 +310,29 @@ class MP_Gateway_Simplify extends MP_Gateway_API {
 		Simplify::$privateKey = $this->private_key;
 
 		$totals = array();
+		$coupon_code = $mp->get_coupon_code();
+		
 		foreach ($cart as $product_id => $variations) {
 			foreach ($variations as $variation => $data) {
-				$totals[] = $mp->before_tax_price($data['price'], $product_id) * $data['quantity'];
+				$price = $mp->coupon_value_product($coupon_code, $data['price'] * $data['quantity'], $product_id);			
+				$totals[] = $price;
 			}
 		}
 		$total = array_sum($totals);
 
-		if($coupon = $mp->coupon_value($mp->get_coupon_code(), $total)) {
-			$total = $coupon['new_total'];
-		}
-
-		if($shipping_price = $mp->shipping_price()) {
+		//shipping line
+    $shipping_tax = 0;
+    if ( ($shipping_price = $mp->shipping_price(false)) !== false ) {
 			$total += $shipping_price;
-		}
+			$shipping_tax = ($mp->shipping_tax_price($shipping_price) - $shipping_price);
+    }
 
-		if($tax_price = $mp->tax_price()) {
+    //tax line if tax inclusive pricing is off. It it's on it would screw up the totals
+    if ( ! $mp->get_setting('tax->tax_inclusive') ) {
+    	$tax_price = ($mp->tax_price(false) + $shipping_tax);
 			$total += $tax_price;
-		}
-
+    }
+        
 		$order_id = $mp->generate_order_id();
 
 		try {
