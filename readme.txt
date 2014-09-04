@@ -2,7 +2,7 @@
 Contributors: WPMUDEV, uglyrobot
 Tags:  buddypress, cart, checkout, digital downloads, downloads, e-downloads, ecommerce, inventory, marketplace, multisite, sales, sell, shipping, shop, shopping, stock, store, tax, VAT, WordPress commerce, 2Checkout, 2CO, Authorize.net, Authorize, AIM Checkout, Bitpay,  eWay Shared Payments, eWay Rapid 3.0 Payments, iDEAL, Manual Payments, Skrill, Moneybookers, PayPal Payflow Pro,  Paymill, PayPal Chained Payments, PayPal Express Checkout, PIN, Simplify Commerce by MasterCard, Stripe, WePay, UPS, USPS, FedEx, Pickup, Widgets, Variable,  physical, virtual, tangible, intangible, wp e-commerce
 Requires at least: 3.7
-Tested up to: 3.9.1
+Tested up to: 4.0
 Stable tag: trunk
 
 MarketPress is the best free eCommerce plugin available for WordPress. Beautiful, powerful and easy to use.
