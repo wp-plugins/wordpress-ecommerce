@@ -1,13 +1,13 @@
 <?php
 /*
 Plugin Name: MarketPress Lite
-Version: 2.9.5.1
-Plugin URI: https://premium.wpmudev.org/project/e-commerce/
+Version: 2.9.5.3
+Plugin URI: https://wordpress.org/plugins/wordpress-ecommerce/
 Description: The complete WordPress ecommerce plugin - works perfectly with BuddyPress and Multisite too to create a social marketplace, where you can take a percentage! Activate the plugin, adjust your settings then add some products to your store.
 Author: WPMU DEV
 Author URI: http://premium.wpmudev.org/
 Text Domain: mp
-WDP ID: 220
+WDP ID: 144
 
 Copyright 2009-2014 Incsub (http://incsub.com)
 Author - Aaron Edwards
@@ -29,8 +29,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA	 02111-1307	 USA
 
 define('MP_LITE', true);
 
+if ( ! class_exists('MarketPress') ) :
 class MarketPress {
-	var $version = '2.9.5.1';
+	var $version = '2.9.5.3';
 	var $location;
 	var $plugin_dir = '';
 	var $plugin_url = '';
@@ -79,8 +80,8 @@ class MarketPress {
 	 
 	 //maybe install
 	 $this->install();
-	 add_action('wpmu_new_blog', array(&$this, 'setup_new_blog'), 10, 6);	 
-
+	 add_action('wpmu_new_blog', array(&$this, 'setup_new_blog'), 10, 6);
+	 
 	if ( MP_LITE === false ) {
 		//load dashboard notice
 		global $wpmudev_notices;
@@ -164,7 +165,7 @@ class MarketPress {
 		
 		if ( MP_HIDE_MENUS === false ) { //allows you to hide MP menus
 			add_filter( 'wp_list_pages', array(&$this, 'filter_list_pages'), 10, 2 );
-			add_filter( 'wp_nav_menu_objects', array(&$this, 'filter_nav_menu'), 10, 2 );
+			add_filter( 'wp_get_nav_menu_items', array(&$this, 'filter_nav_menu'), 10, 2 );
 		}
 		
 		/* enqueue lightbox - this will just register the styles/scripts
@@ -1728,7 +1729,7 @@ Thanks again!", 'mp')
 		return $list;
 	}
 
-	function wp_title_output($title, $sep, $seplocation) {
+	function wp_title_output( $title = '', $sep = '', $seplocation = '' ) {
 	 // Determines position of the separator and direction of the breadcrumb
 		if ( 'right' == $seplocation )
 			return $this->page_title_output($title, true) . " $sep ";
@@ -7912,9 +7913,11 @@ Notification Preferences: %s', 'mp');
 
 global $mp;
 $mp = new MarketPress();
+endif;
 
 
 //Shopping cart widget
+if ( ! class_exists('MarketPress_Shopping_Cart') ) :
 class MarketPress_Shopping_Cart extends WP_Widget {
 
 	function MarketPress_Shopping_Cart() {
@@ -7984,8 +7987,10 @@ class MarketPress_Shopping_Cart extends WP_Widget {
 		*/
 	}
 }
+endif;
 
 //Product listing widget
+if ( ! class_exists('MarketPress_Product_List') ) :
 class MarketPress_Product_List extends WP_Widget {
 
 	function MarketPress_Product_List() {
@@ -8186,8 +8191,10 @@ class MarketPress_Product_List extends WP_Widget {
 	<?php
 	}
 }
+endif;
 
 //Product categories widget
+if ( ! class_exists('MarketPress_Categories_Widget') ) :
 class MarketPress_Categories_Widget extends WP_Widget {
 
 	function MarketPress_Categories_Widget() {
@@ -8270,8 +8277,10 @@ class MarketPress_Categories_Widget extends WP_Widget {
 <?php
 	}
 }
+endif;
 
 //Product tags cloud
+if ( ! class_exists('MarketPress_Tag_Cloud_Widget') ) :
 class MarketPress_Tag_Cloud_Widget extends WP_Widget {
 
 	function MarketPress_Tag_Cloud_Widget() {
@@ -8318,3 +8327,4 @@ class MarketPress_Tag_Cloud_Widget extends WP_Widget {
 	<?php
 	}
 }
+endif;

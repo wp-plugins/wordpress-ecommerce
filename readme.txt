@@ -137,6 +137,15 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 
 == Changelog ==
 
+= 2.9.5.3 =
+* Fixed: Fatal errors when MarketPress Pro is activated while MarketPress lite is also activated
+* Fixed: PHP warnings with wp_title_output()
+* Fixed: Nav Menu items classes not being applied correctly
+* Fixed: Bug with pagination when displaying products from a given category using [mp_list_products] short code
+
+= 2.9.5.2 =
+* Added: BN codes to PayPal gateways
+
 = 2.9.5.1 =
 * Added: UPS shipping gateway now allows admin to choose the appropriate pickup type allowing for more accurate rate requests
 * Fixed: When using global product list the "buy now" button adds the item to a cart that doesn't exist http://wp.mu/a2i
@@ -145,7 +154,6 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 * Fixed: Unable to deselect "use default embedded form" in Stripe gateway settings http://wp.mu/a0t
 * Fixed: Unable to deselect checkboxes in Bitpay gateway settings
 * Fixed: Extra characters at end of admin order notification email http://wp.mu/a0u
-*
 
 = 2.9.5 =
 * Fixed: When using global cart admin some times loses the ability to change shipping methods
