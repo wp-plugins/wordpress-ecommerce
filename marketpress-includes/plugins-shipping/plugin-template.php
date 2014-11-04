@@ -3,7 +3,6 @@
 MarketPress Example Shipping Plugin Template
 */
 
-if ( ! class_exists('My_Plugin_Name') ) :
 class My_Plugin_Name extends MP_Shipping_API {
 
   //private shipping method name. Lowercase alpha (a-z) and dashes (-) only please!
@@ -137,7 +136,6 @@ class My_Plugin_Name extends MP_Shipping_API {
 	}
 	
 }
-endif;
 
 //register plugin - uncomment to register
 //mp_register_shipping_plugin( 'My_Plugin_Name', 'my-plugin-name', __('My Plugin', 'mp'), false );

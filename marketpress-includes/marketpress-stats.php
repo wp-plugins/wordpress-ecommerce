@@ -2,7 +2,7 @@
 /*
 MarketPress Statistics
 */
-if ( ! class_exists('MarketPress_Stats') ) :
+
 class MarketPress_Stats {
 	
 	var $mp;
@@ -183,4 +183,3 @@ class MarketPress_Stats {
 	}
 }
 $mp_stats = new MarketPress_Stats();
-endif;

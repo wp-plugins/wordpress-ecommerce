@@ -137,6 +137,24 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 
 == Changelog ==
 
+= 2.9.5.6 =
+* Fixed: products being set to draft status after being ordered
+
+= 2.9.5.5 =
+* Added: "mp_imported_products_post_status" filter * gives the ability to set the post status of imported products
+* Fixed: when importing products via CSV and products have the same featured image only the first product attaches the image
+* Fixed: bug with mp_list_products short code and pagination
+* Fixed: bug with tax calculations due to over*rounding
+* Fixed: bug with PayPal Express gateway when tax shipping is enabled
+* Fixed: bug with automatic emails some times not being RFC5322 compliant due to line length
+
+= 2.9.5.4 =
+* Fixed: Shipping tax not being calculated correctly when using tax*inclusive pricing
+* Fixed: Out of stock products are still showing when "Hide out of stock items" is enabled
+* Fixed: Extra title showing above the default product image in grid view
+* Fixed: Pinterest pin*it button doesn't open in new window/tab
+* Fixed: Store menu items regenerate themselves after being deleted
+
 = 2.9.5.3 =
 * Fixed: Fatal errors when MarketPress Pro is activated while MarketPress lite is also activated
 * Fixed: PHP warnings with wp_title_output()

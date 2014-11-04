@@ -3,7 +3,6 @@
 MarketPress Example Shipping Plugin Template
 */
 
-if ( ! class_exists('MP_Shipping_Pickup') ) :
 class MP_Shipping_Pickup extends MP_Shipping_API {
 
   //private shipping method name. Lowercase alpha (a-z) and dashes (-) only please!
@@ -224,7 +223,6 @@ class MP_Shipping_Pickup extends MP_Shipping_API {
 	}
 	
 }
-endif;
 
 //register plugin - uncomment to register
 mp_register_shipping_plugin( 'MP_Shipping_Pickup', 'pickup', __('Pickup', 'mp'), true );

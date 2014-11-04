@@ -3,7 +3,6 @@
 MarketPress Multisite Features
 */
 
-if ( ! class_exists('MarketPress_MS') ) :
 class MarketPress_MS {
 
 	var $build = 2;
@@ -1132,10 +1131,9 @@ class MarketPress_MS {
 		return mp_global_tag_cloud( false, $limit, $seperator, $include );
 	}
 }
-$GLOBALS['mp_wpmu'] = new MarketPress_MS();
-endif;
 
-if ( ! function_exists('mp_main_site_id') ) :
+$GLOBALS['mp_wpmu'] = new MarketPress_MS();
+
 function mp_main_site_id() {
 	global $current_site;
 	if ( MP_ROOT_BLOG !== false ) {
@@ -1144,7 +1142,6 @@ function mp_main_site_id() {
 		return $current_site->blog_id;
 	}
 }
-endif;
 
 
 /*** Template Tags ***/
@@ -1164,7 +1161,6 @@ endif;
  *
  * @param string|array $args Optional. Override default arguments.
  */
-if ( ! function_exists('mp_global_categories_list') ) :
 function mp_global_categories_list( $args = '' ) {
 	global $wpdb;
 	$settings = get_site_option( 'mp_network_settings' );
@@ -1229,7 +1225,6 @@ function mp_global_categories_list( $args = '' ) {
 	else
 		return apply_filters('mp_global_categories_list', '<ul id="mp_category_list">' . $list . '</ul>');
 }
-endif;
 
 /**
  * Display Global Products tag cloud.
@@ -1239,7 +1234,6 @@ endif;
  * @param string $seperator Optional. String to seperate tags by.
  * @param string $include Optional. What to show, 'tags', 'categories', or 'both'.
  */
-if ( ! function_exists('mp_global_tag_cloud') ) :
 function mp_global_tag_cloud( $echo = true, $limit = 45, $seperator = ' ', $include = 'both' ) {
 	global $wpdb;
 	$settings = get_site_option( 'mp_network_settings' );
@@ -1316,7 +1310,6 @@ function mp_global_tag_cloud( $echo = true, $limit = 45, $seperator = ' ', $incl
 
 	return apply_filters('mp_global_tag_cloud', '<div id="mp_tag_cloud">' . $return . '</div>');
 }
-endif;
 
 /*
  * Displays a global list of products according to preference.
@@ -1339,7 +1332,6 @@ endif;
  *
  * @param string|array $args Optional. Override default arguments.
  */
-if ( ! function_exists('mp_list_global_products') ) :
 function mp_list_global_products( $args ) {
 	global $wpdb, $mp, $mp_wpmu;
 	
@@ -1451,7 +1443,6 @@ function mp_list_global_products( $args ) {
 		return $content;
 	}
 }
-endif;
 
 if (!function_exists('_mp_global_products_html_list')) :
 function _mp_global_products_html_list( $results, $args ) {
@@ -1610,7 +1601,6 @@ endif;
  *
  * @param string|array $args Optional. Override default arguments.
  */
-if ( ! function_exists('mp_global_products_nav_link') ) :
 function mp_global_products_nav_link( $args = '', $query = null ) {
 	global $wpdb, $mp;
 	
@@ -1717,12 +1707,10 @@ function mp_global_products_nav_link( $args = '', $query = null ) {
 	else
 		return $return;
 }
-endif;
 
 /*** Widgets ***/
 
 //Product listing widget
-if ( ! class_exists('MarketPress_Global_Product_List') ) :
 class MarketPress_Global_Product_List extends WP_Widget {
 
 	function MarketPress_Global_Product_List() {
@@ -1827,10 +1815,8 @@ class MarketPress_Global_Product_List extends WP_Widget {
 	<?php
 	}
 }
-endif;
 
 //Product tags cloud
-if ( ! class_exists('MarketPress_Global_Tag_Cloud_Widget') ) :
 class MarketPress_Global_Tag_Cloud_Widget extends WP_Widget {
 
 	function MarketPress_Global_Tag_Cloud_Widget() {
@@ -1877,10 +1863,8 @@ class MarketPress_Global_Tag_Cloud_Widget extends WP_Widget {
 	<?php
 	}
 }
-endif;
 
 //Product categories list
-if ( ! class_exists('MarketPress_Global_Category_List_Widget') ) :
 class MarketPress_Global_Category_List_Widget extends WP_Widget {
 
 	function MarketPress_Global_Category_List_Widget() {
@@ -1953,4 +1937,3 @@ class MarketPress_Global_Category_List_Widget extends WP_Widget {
 	<?php
 	}
 }
-endif;

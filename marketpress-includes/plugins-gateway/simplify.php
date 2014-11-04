@@ -31,7 +31,6 @@ Author: MasterCard International Incorporated
  * SUCH DAMAGE.
  */
 
-if ( ! class_exists('MP_Gateway_Simplify') ) :
 class MP_Gateway_Simplify extends MP_Gateway_API {
 
 	var $plugin_name = 'simplify';
@@ -381,6 +380,5 @@ class MP_Gateway_Simplify extends MP_Gateway_API {
 	}
 
 }
-endif;
 
 mp_register_gateway_plugin('MP_Gateway_Simplify', 'simplify', __('Simplify Commerce by MasterCard', 'mp'));

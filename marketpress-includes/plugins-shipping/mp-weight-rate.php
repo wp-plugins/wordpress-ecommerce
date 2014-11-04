@@ -5,7 +5,6 @@ Author: Nick Bunn (Salty Dog Interactive)
 Version: 1.1
 */
 
-if ( ! class_exists('MP_Shipping_Weight_Rate') ) :
 class MP_Shipping_Weight_Rate extends MP_Shipping_API {
 
   //private shipping method name. Lowercase alpha (a-z) and dashes (-) only please!
@@ -356,7 +355,6 @@ class MP_Shipping_Weight_Rate extends MP_Shipping_API {
   }
 
 }
-endif;
 
 //register plugin - uncomment to register
 mp_register_shipping_plugin( 'MP_Shipping_Weight_Rate', 'weight-rate', __('Weight Rate', 'mp') );

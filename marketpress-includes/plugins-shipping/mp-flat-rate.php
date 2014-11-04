@@ -3,8 +3,6 @@
 MarketPress Flat-Rate Shipping Plugin
 Author: Aaron Edwards (Incsub)
 */
-
-if ( ! class_exists('MP_Shipping_Flat_Rate') ) :
 class MP_Shipping_Flat_Rate extends MP_Shipping_API {
 
   //private shipping method name. Lowercase alpha (a-z) and dashes (-) only please!
@@ -277,7 +275,6 @@ class MP_Shipping_Flat_Rate extends MP_Shipping_API {
     return $price;
   }
 }
-endif;
 
 //register plugin
 mp_register_shipping_plugin( 'MP_Shipping_Flat_Rate', 'flat-rate', __('Flat Rate', 'mp') );
