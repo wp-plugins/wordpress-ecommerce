@@ -1,6 +1,6 @@
 === MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV
-Tags: cart, checkout, digital downloads, ecommerce, inventory, marketplace, sell, shipping, shop, shopping, store, WordPress commerce, 2Checkout, 2CO, Authorize.net, Authorize, AIM Checkout, Bitpay,  eWay, iDEAL, Skrill, Moneybookers,  Paymill, PayPal, Simplify Commerce by MasterCard, Stripe, WePay, UPS, USPS, FedEx, wp e-commerce
+Tags: cart, checkout, digital downloads, ecommerce, inventory, marketplace, sell, shipping, shop, shopping, store, 2Checkout, 2CO, Authorize.net, Authorize, AIM Checkout, Bitpay, iDEAL, Skrill, Moneybookers, PayPal, Stripe, WePay, wp e-commerce
 Requires at least: 3.7
 Tested up to: 4.1
 Stable tag: trunk
