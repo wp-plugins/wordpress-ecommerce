@@ -1,4 +1,4 @@
-=== MarketPress - WordPress eCommerce  ===
+﻿=== MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV
 Tags: cart, checkout, digital downloads, ecommerce, inventory, sell, shipping, shop, shopping, store, 2Checkout, 2CO, Authorize.net, Authorize, Moneybookers, PayPal, Stripe, wp e-commerce
 Requires at least: 3.7
@@ -136,6 +136,22 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Manage Orders
 
 == Changelog ==
+
+= 3.0 =
+* TONS of code cleanup/optimizations - 99% of PHP notices/warnings have been cleaned up
+* New: Short codes can now be inserted via a popup wizard that is available from within the TinyMCE editor
+* New: Product variations have been rebuilt from the ground up
+* New: Setup wizard
+* New: Regular/Sale price can now be bulk/quick edited
+* New: Set store capabilities for all of your user roles
+* New: Add-on system
+* Coupons are now an add-on and can be disabled if not being used
+* Admin interface has been rebuilt from the ground up
+* Added new default store style
+* Added links to settings/network settings on plugins page.
+* Settings metaboxes now use ajax instead of page refresh where applicable.
+* Added screen options tab on orders screen - users can now specify how many orders per page they want.
+* Added on-demand (jQuery) data validation on most settings screens.
 
 = 2.9.5.6 =
 * Fixed: products being set to draft status after being ordered
