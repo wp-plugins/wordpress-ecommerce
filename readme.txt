@@ -1,34 +1,30 @@
-﻿=== MarketPress - WordPress eCommerce  ===
+=== MarketPress - WordPress eCommerce  ===
 Contributors: WPMUDEV
-Tags: cart, checkout, digital downloads, ecommerce, inventory, sell, shipping, shop, shopping, store, 2Checkout, 2CO, Authorize.net, PayPal, Stripe, wp e-commerce
+Tags: cart, checkout, digital downloads, ecommerce, inventory, sell, shipping, shop, shopping, store, 2Checkout, 2CO, Authorize.net, Authorize, Moneybookers, PayPal, Stripe, wp e-commerce
 Requires at least: 3.7
 Tested up to: 4.1
 Stable tag: trunk
 
-MarketPress is the WordPress eCommerce plugin that does it all – no extensions required.
+MarketPress is the best free eCommerce plugin available for WordPress. Beautiful, powerful and easy to use.
 
 == Description ==
 
-MarketPress offers the easiest way to sell anything online with tons of built-in core features and simple configuration.
+MarketPress sets the standard for WordPress eCommerce solutions, providing an elegant shopping experience that supports all major payment gateways and allows you to easily manage distribution and shopping costs with custom shipping options.
 
-No need to spend hundreds of dollars purchasing extra add-ons or special licenses. MarketPress brings together the power of dozens of different plugins in one solid standalone product.
+Why spend thousands of dollars on cowboy-coded extensions and add-ons? There's no need to purchase extra add-ons or special licenses when MarketPress brings together the power of dozens of different plugins in one solid standalone product.
 
-[youtube https://www.youtube.com/watch?v=-YJZoxy7hkM]
+[youtube http://www.youtube.com/watch?v=4QX1P7e-9dw&hd=1]
 
 = Features = 
 
 Setting up your own online store couldn't be easier with MarketPress. Features include:
 
 * All the major payment gateways
-* Choose from 120 different currencies as your default currency
+* Supports all major currencies
 * Fully internationalized by the WPML crew
 * Sell real objects or digital downloads
-* Simple one-page checkout
-* Easy setup with built-in Wizard
-* Choose how many times a customer can download a file they have purchased
 * Ready to go for tax and VAT
-* Calculated shipping modules (UPS, USPS, Fedex, in-store pickup)
-* Pinterest, Facebook and Twitter shares buttons
+* Multiple shipping options
 * Coupons, discounts and affiliate-ready
 * Fully integrated with Google Universal Analytics eCommerce tracking
 * Unlimited product variations
@@ -37,44 +33,51 @@ Setting up your own online store couldn't be easier with MarketPress. Features i
 * Per order product limits
 * AJAX cart and cart widget
 * Powerful shortcodes you can use anywhere
-* Shortcode button in the post visual editor
 * Link any product to an external link
+* Categories and tags
 * Stock tracking and order management and alerts
-* Automatically hide products when they are out of stock
-* Display related products
+* Fully customizable urls
 * Checkout without having to be a site user
 * Looks great with any WordPress theme
 
-
-= Easy To Customize Without Code = 
+= Easily Customizeable = 
 
 There's no limit to how you can change the look and feel of MarketPress, but in case you don't want to get stuck into CSS, it comes with:
 
+* Beautiful themes you can customize without touching code
 * Preset CSS styles
 * Powerful widgets
 * Product thumbnails/images with lightbox zooming
 
-And with our comprehensive list of shortcodes you can create beautiful and complex layouts with ease, greatly Improving the functionality of your site without the added frustration of editing code.
+= Powerful Widgets = 
+
+Use the Shopping Cart widget to dynamically display a cart's contents along with a checkout button. Thanks to AJAX, you can add an item and it shows in the cart instantly. You can also display product tag clouds, product categories and product lists with our handy widgets.
+
+= Solid Shortcodes =
+
+Designing and organising your online store has never been easier. With our powerful shortcodes you can create beautiful and complex layouts with ease, greatly Improving the functionality of your site without the added frustration of editing code.
 
 = Multisite and BuddyPress Compatible = 
 
-Set up your own eBay or Etsy-style network of stores and take a percentage of each sale.
+MarketPress is 100 per cent compatible with Multisite and BuddyPress. You could set up your own eBay or Etsy-style network of stores and take a percentage of each sale!
 
-Whether you want to set up an individual storefront online or an entire eCommerce network for stores, MarketPress is the go-to solution.
+= Comprehensive Documentation =
 
-= Setup Wizard Included =
+We've designed MarketPress to provide a simple and beautiful user experience. But if you do get stuck, we've got all the documentation you need to understand the ins and outs of how it works.
 
-The MarketPress setup wizard will walk you through setting up your store, step-by-step, so you don’t have to think about what’s going on behind the scenes.
-
-If you run into any problems getting started, MarketPress is well documented and our support team is available around the clock to answer any questions you may have.
+Our <a href="https://premium.wpmudev.org/project/e-commerce/#usage>
+in-depth step-by-step usage guide</a> includes handy screenshots. We've also got a fantastic <a href="https://premium.wpmudev.org/project/e-commerce/#usage>
+video guide</a> that walks you through the settings in MarketPress.
 
 = Want More? =
 
 <a href="http://premium.wpmudev.org/project/e-commerce/">Download the pro version</a> for:
 
-* PDF Invoicing
-* Full suite of 16 payment gateways (Free version is limited to Free Orders, Manual Payments,PayPal Express Checkout and Simplify Commerce by MasterCard)
-
+* Product personalization (i.e. assign a customer entered text field to a product)
+* Google Analytics eCommerce tracking
+* More than one built-in store style
+* Calculated shipping modules (UPS, USPS, Fedex, in-store pickup)
+* Full suite of payment methods (Lite version only displays PayPal Express, Simplify and manual payment gateways)
 
 == Installation ==
 = To Install: =
@@ -133,22 +136,6 @@ We provide comprehensive and guaranteed support on the <a href='http://premium.w
 8. Manage Orders
 
 == Changelog ==
-
-= 3.0 =
-* TONS of code cleanup/optimizations - 99% of PHP notices/warnings have been cleaned up
-* New: Short codes can now be inserted via a popup wizard that is available from within the TinyMCE editor
-* New: Product variations have been rebuilt from the ground up
-* New: Setup wizard
-* New: Regular/Sale price can now be bulk/quick edited
-* New: Set store capabilities for all of your user roles
-* New: Add-on system
-* Coupons are now an add-on and can be disabled if not being used
-* Admin interface has been rebuilt from the ground up
-* Added new default store style
-* Added links to settings/network settings on plugins page.
-* Settings metaboxes now use ajax instead of page refresh where applicable.
-* Added screen options tab on orders screen - users can now specify how many orders per page they want.
-* Added on-demand (jQuery) data validation on most settings screens.
 
 = 2.9.5.6 =
 * Fixed: products being set to draft status after being ordered
